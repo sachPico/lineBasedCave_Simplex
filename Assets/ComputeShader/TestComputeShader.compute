@@ -1,0 +1,92 @@
+﻿// Each #kernel tells which function to compile; you can have many kernels
+#pragma kernel GenerateMesh
+#include "Include/MarchTables.compute"
+#include "Include/Inputs.compute"
+
+struct Triangle {
+    float3 vertexC;
+    float3 vertexB;
+    float3 vertexA;
+};
+/*struct LineBuffer
+{
+    float3 startPoint;
+    float3 endPoint;
+};
+
+RWStructuredBuffer<LineBuffer> testBuffer;*/
+
+AppendStructuredBuffer<Triangle> triangles;
+
+float4 vertices[8];
+
+void GetVertices(uint3 id)
+{
+    uint firstVertIndex = id.x + (id.z * numVertexX) + (id.y * numVertexX * numVertexZ);
+
+    vertices[0] = samplePoints[firstVertIndex];
+    vertices[1] = samplePoints[firstVertIndex+1];
+    vertices[2] = samplePoints[firstVertIndex+1+numVertexX];
+    vertices[3] = samplePoints[firstVertIndex+numVertexX];
+    vertices[4] = samplePoints[firstVertIndex+(numVertexX*numVertexZ)];
+    vertices[5] = samplePoints[firstVertIndex+(numVertexX*numVertexZ)+1];
+    vertices[6] = samplePoints[firstVertIndex+(numVertexX*numVertexZ)+1+numVertexX];
+    vertices[7] = samplePoints[firstVertIndex+(numVertexX*numVertexZ)+numVertexX];
+}
+
+bool CheckDensity(float4 samplePoint)
+{
+    if(samplePoint.w>=isoLevel)
+    {
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
+
+float3 interpolateVerts(float4 v1, float4 v2) {
+    float t = (isoLevel - v1.w) / (v2.w - v1.w); //Angka 1 harus diganti isoLevel
+    return v1.xyz + (t*(v2.xyz-v1.xyz));
+}
+
+[numthreads(1,1,1)]
+void GenerateMesh (uint3 id : SV_DISPATCHTHREADID)    //id = index kubus
+{
+    if(id.x>=(uint)numVertexX || id.y>=(uint)numVertexY || id.z>=(uint)numVertexZ)
+    {
+        return;
+    }
+
+    GetVertices(id);
+
+    int combinationIndex=0;
+
+    if(CheckDensity(vertices[0])) combinationIndex |= 1;
+    if(CheckDensity(vertices[1])) combinationIndex |= 2;
+    if(CheckDensity(vertices[2])) combinationIndex |= 4;
+    if(CheckDensity(vertices[3])) combinationIndex |= 8;
+    if(CheckDensity(vertices[4])) combinationIndex |= 16;
+    if(CheckDensity(vertices[5])) combinationIndex |= 32;
+    if(CheckDensity(vertices[6])) combinationIndex |= 64;
+    if(CheckDensity(vertices[7])) combinationIndex |= 128;
+
+    for(int i=0; triangulation[combinationIndex][i]!= -1; i+=3)
+    {
+        int a0 = cornerIndexAFromEdge[triangulation[combinationIndex][i]];
+        int b0 = cornerIndexBFromEdge[triangulation[combinationIndex][i]];
+
+        int a1 = cornerIndexAFromEdge[triangulation[combinationIndex][i+1]];
+        int b1 = cornerIndexBFromEdge[triangulation[combinationIndex][i+1]];
+
+        int a2 = cornerIndexAFromEdge[triangulation[combinationIndex][i+2]];
+        int b2 = cornerIndexBFromEdge[triangulation[combinationIndex][i+2]];
+
+        Triangle tri;
+        tri.vertexA = interpolateVerts(vertices[a0], vertices[b0]);
+        tri.vertexB = interpolateVerts(vertices[a1], vertices[b1]);
+        tri.vertexC = interpolateVerts(vertices[a2], vertices[b2]);
+        triangles.Append(tri);
+    }
+}

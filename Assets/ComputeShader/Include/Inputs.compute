@@ -1,0 +1,3 @@
+﻿RWStructuredBuffer<float4> samplePoints;
+int1 numVertexX, numVertexY, numVertexZ;
+float1 voxelSize, isoLevel;
