@@ -8,6 +8,8 @@ struct Triangle {
     float3 vertexB;
     float3 vertexA;
 };
+
+float random;
 /*struct LineBuffer
 {
     float3 startPoint;
