@@ -8,14 +8,13 @@ public class Voxel:MonoBehaviour
     public float size;
     [Header("Unit voxel position")]
     public Vector3 voxelPosition;
-    public int xGrid, yGrid, zGrid;
+    public Vector3Int voxelGrid;
     [Header("Voxel boundary center")]
     public Vector3 boundaryCenter;
     public Vector3 boundaryWorldPos;
     [Header("Voxels size")]
-    public int numVoxelX;
-    public int numVoxelY;
-    public int numVoxelZ;
+    public Vector3Int numVoxel;
+    public Vector3Int numVertex;
     [Space()]
     public long totalVoxel;
     public int totalVertex;
@@ -24,22 +23,23 @@ public class Voxel:MonoBehaviour
     [HideInInspector]
     public Node[] voxelNodes = new Node[8];
     [HideInInspector]
-    public int totalVertexLayer, numVertexX, numVertexY, numVertexZ;
+    public int totalVertexLayer;
+    
 
     private Vector3Int oldNumVoxel;
 
     public void SetBoundaryCenter()
     {
-        boundaryCenter.x = size/2f*numVoxelX;
-        boundaryCenter.y = size/2f*numVoxelY;
-        boundaryCenter.z = size/2f*numVoxelZ;
+        boundaryCenter.x = size/2f*numVoxel.x;
+        boundaryCenter.y = size/2f*numVoxel.y;
+        boundaryCenter.z = size/2f*numVoxel.z;
     }
 
     public void InitiateVoxelNodes()
     {
-        voxelPosition.x = size*xGrid;
-        voxelPosition.y = size*yGrid;
-        voxelPosition.z = size*zGrid;
+        voxelPosition.x = size*voxelGrid.x;
+        voxelPosition.y = size*voxelGrid.y;
+        voxelPosition.z = size*voxelGrid.z;
 
         voxelNodes[0].SetPos(voxelPosition);
         voxelNodes[1].SetPos(voxelPosition+(Vector3.right*size));
@@ -52,12 +52,12 @@ public class Voxel:MonoBehaviour
 
         /*for(int i=0; i<voxelNodes.Length; i++)
         {
-            voxelNodes[i]+=(Vector3.right*xGrid*size)+(Vector3.up*yGrid*size)+(Vector3.forward*zGrid*size);
+            voxelNodes[i]+=(Vector3.right*voxelGrid.x*size)+(Vector3.up*voxelGrid.y*size)+(Vector3.forward*voxelGrid.z*size);
         }*/
 
-        boundaryWorldPos.x = size*numVoxelX;
-        boundaryWorldPos.y = size*numVoxelY;
-        boundaryWorldPos.z = size*numVoxelZ;
+        boundaryWorldPos.x = size*numVoxel.x;
+        boundaryWorldPos.y = size*numVoxel.y;
+        boundaryWorldPos.z = size*numVoxel.z;
     }
 
     void OnDrawGizmos()
@@ -68,41 +68,41 @@ public class Voxel:MonoBehaviour
             Gizmos.DrawCube(
                 new Vector3
                 (
-                    (xGrid*size)+(size/2),
-                    (yGrid*size)+(size/2),
-                    (zGrid*size)+(size/2)
+                    (voxelGrid.x*size)+(size/2),
+                    (voxelGrid.y*size)+(size/2),
+                    (voxelGrid.z*size)+(size/2)
                 )
                 ,Vector3.one*size
             );
-            for(int i=1; i<numVoxelX; i++)
+            for(int i=1; i<numVoxel.x; i++)
             {
                 Gizmos.color = Color.gray;
-                Gizmos.DrawLine(new Vector3(i*size,0,0), new Vector3(i*size,0,numVoxelZ*size));
+                Gizmos.DrawLine(new Vector3(i*size,0,0), new Vector3(i*size,0,numVoxel.z*size));
             }
-            for(int i=1; i<numVoxelZ; i++)
+            for(int i=1; i<numVoxel.z; i++)
             {
                 Gizmos.color = Color.gray;
-                Gizmos.DrawLine(new Vector3(0,0,i*size), new Vector3(numVoxelX*size,0,i*size));
+                Gizmos.DrawLine(new Vector3(0,0,i*size), new Vector3(numVoxel.x*size,0,i*size));
             }
-            for(int i=1; i<numVoxelX; i++)
+            for(int i=1; i<numVoxel.x; i++)
             {
                 Gizmos.color = Color.gray;
-                Gizmos.DrawLine(new Vector3(i*size,0,numVoxelZ*size), new Vector3(i*size,numVoxelY*size,numVoxelZ*size));
+                Gizmos.DrawLine(new Vector3(i*size,0,numVoxel.z*size), new Vector3(i*size,numVoxel.y*size,numVoxel.z*size));
             }
-            for(int i=1; i<numVoxelY; i++)
+            for(int i=1; i<numVoxel.y; i++)
             {
                 Gizmos.color = Color.gray;
-                Gizmos.DrawLine(new Vector3(0,i*size,numVoxelZ*size), new Vector3(numVoxelX*size,i*size,numVoxelZ*size));
+                Gizmos.DrawLine(new Vector3(0,i*size,numVoxel.z*size), new Vector3(numVoxel.x*size,i*size,numVoxel.z*size));
             }
-            for(int i=1; i<numVoxelZ; i++)
+            for(int i=1; i<numVoxel.z; i++)
             {
                 Gizmos.color = Color.gray;
-                Gizmos.DrawLine(new Vector3(0,0,i*size), new Vector3(0,numVoxelY*size,i*size));
+                Gizmos.DrawLine(new Vector3(0,0,i*size), new Vector3(0,numVoxel.y*size,i*size));
             }
-            for(int i=1; i<numVoxelY; i++)
+            for(int i=1; i<numVoxel.y; i++)
             {
                 Gizmos.color = Color.gray;
-                Gizmos.DrawLine(new Vector3(0,i*size,0), new Vector3(0,i*size,numVoxelZ*size));
+                Gizmos.DrawLine(new Vector3(0,i*size,0), new Vector3(0,i*size,numVoxel.z*size));
             }
             //Draw boundary box gizmos
             
@@ -114,28 +114,28 @@ public class Voxel:MonoBehaviour
 
     void OnValidate()
     {
-        oldNumVoxel.x = numVoxelX;
-        oldNumVoxel.y = numVoxelY;
-        oldNumVoxel.z = numVoxelZ;
+        oldNumVoxel.x = numVoxel.x;
+        oldNumVoxel.y = numVoxel.y;
+        oldNumVoxel.z = numVoxel.z;
 
-        numVoxelX = Mathf.Clamp(numVoxelX,1,(int)(maxVertex/(oldNumVoxel.y*oldNumVoxel.z))-2);
-        //oldNumVoxel.x = numVoxelX;
-        numVoxelY = Mathf.Clamp(numVoxelY,1,(int)(maxVertex/(oldNumVoxel.x*oldNumVoxel.z))-2);
-        //oldNumVoxel.y = numVoxelY;
-        numVoxelZ = Mathf.Clamp(numVoxelZ,1,(int)(maxVertex/(oldNumVoxel.y*oldNumVoxel.x))-2);
-        //oldNumVoxel.z = numVoxelZ;
+        numVoxel.x = Mathf.Clamp(numVoxel.x,1,(int)(maxVertex/(oldNumVoxel.y*oldNumVoxel.z))-2);
+        //oldNumVoxel.x = numVoxel.x;
+        numVoxel.y = Mathf.Clamp(numVoxel.y,1,(int)(maxVertex/(oldNumVoxel.x*oldNumVoxel.z))-2);
+        //oldNumVoxel.y = numVoxel.y;
+        numVoxel.z = Mathf.Clamp(numVoxel.z,1,(int)(maxVertex/(oldNumVoxel.y*oldNumVoxel.x))-2);
+        //oldNumVoxel.z = numVoxel.z;
 
-        xGrid = Mathf.Clamp(xGrid, 0, numVoxelX-1);
-        yGrid = Mathf.Clamp(yGrid, 0, numVoxelY-1);
-        zGrid = Mathf.Clamp(zGrid, 0, numVoxelZ-1);
-        numVertexX = Mathf.Clamp(numVoxelX+1, 2, 65535);
-        numVertexY = Mathf.Clamp(numVoxelY+1, 2, 65535);
-        numVertexZ = Mathf.Clamp(numVoxelZ+1, 2, 65535);
+        voxelGrid.x = Mathf.Clamp(voxelGrid.x, 0, numVoxel.x-1);
+        voxelGrid.y = Mathf.Clamp(voxelGrid.y, 0, numVoxel.y-1);
+        voxelGrid.z = Mathf.Clamp(voxelGrid.z, 0, numVoxel.z-1);
+        numVertex.x = Mathf.Clamp(numVoxel.x+1, 2, 65535);
+        numVertex.y = Mathf.Clamp(numVoxel.y+1, 2, 65535);
+        numVertex.z = Mathf.Clamp(numVoxel.z+1, 2, 65535);
         InitiateVoxelNodes();
         SetBoundaryCenter();
-        totalVoxel = numVoxelX*numVoxelY*numVoxelZ;
-        totalVertexLayer = numVertexX*numVertexZ;
-        totalVertex = numVertexY*totalVertexLayer;
+        totalVoxel = numVoxel.x*numVoxel.y*numVoxel.z;
+        totalVertexLayer = numVertex.x*numVertex.z;
+        totalVertex = numVertex.y*totalVertexLayer;
         if((uint)totalVertex >= maxVertex)
         {
             Debug.LogError("Warning! Total vertex must not exceed "+(maxVertex-1)+"! Current number of vertex is = "+ (uint)totalVertex+". Number of vertex in y-dimension will be adjusted!");

@@ -60,6 +60,7 @@ public class LineEditor : Editor
             {
                 l.activeLineIndex = i;
                 l.activeRotation = l.line[i].rotation;
+                l.UpdateAllLines();
             }
             //Check if it's been moved
             if((l.node[l.line[i]._lineProp.node1]+((l.node[l.line[i]._lineProp.node2]-l.node[l.line[i]._lineProp.node1])/2)) != linePos)
@@ -69,7 +70,7 @@ public class LineEditor : Editor
                     Undo.RecordObject(l, "Moved line position");
                     l.node[l.line[i]._lineProp.node1]._nodeProp.position = linePos - lineVec;
                     l.node[l.line[i]._lineProp.node2]._nodeProp.position = linePos + lineVec;
-                    l.UpdateActiveLine();
+                    l.UpdateAllLines();
                 }
             }
         }
@@ -86,13 +87,15 @@ public class LineEditor : Editor
             {
                 Handles.color = new Color(0,0,0,0.5f);
             }
-            Vector3 nodePos = Handles.FreeMoveHandle(i+200,l.node[i]._nodeProp.position, Quaternion.identity, l.node[i]._nodeProp.minRadius, Vector3.zero, Handles.SphereHandleCap);
+            Vector3 nodePos = Handles.FreeMoveHandle(i+200,l.node[i]._nodeProp.position, Quaternion.identity, l.node[i]._nodeProp.maxRadius, Vector3.zero, Handles.SphereHandleCap);
             //Check if it's selected
             if(guiEvent.button==0 && GUIUtility.hotControl==i+200)
             {
                 l.activeNodeIndex = i;
+                l.activeNodePosition = l.node[l.activeNodeIndex]._nodeProp.position;
                 l.minRadius = l.node[l.activeNodeIndex]._nodeProp.minRadius;
                 l.maxRadius = l.node[l.activeNodeIndex]._nodeProp.maxRadius;
+                l.UpdateAllLines();
             }
             
 
@@ -108,7 +111,7 @@ public class LineEditor : Editor
             l.voxelGrids.boundaryWorldPos.x*l.densityGenerator.numberOfGeneratedMeshObject.x,
             l.voxelGrids.boundaryWorldPos.y*l.densityGenerator.numberOfGeneratedMeshObject.y,
             l.voxelGrids.boundaryWorldPos.z*l.densityGenerator.numberOfGeneratedMeshObject.z));
-                l.UpdateActiveLine();
+                l.UpdateAllLines();
             }
         }
         Handles.color = Color.red;

@@ -5,8 +5,13 @@ using UnityEngine;
 [System.Serializable]
 public struct LineProperties
 {
+    //Index of two connected nodes
     public int node1, node2;
+    //Unit vector of x-local and y-local axis. Z-local is the unit vector of the line itself
     public Vector3 rightLocal, upLocal;
+    //AC and BD are the nearest distance between each node of a line and the center of one of two circles of a cylinder
+    //The calculations for these two variables are done in Unity to reduce the calculations done in compute shader
+    public float AC, BD, CE, DF, lineLength;
 }
 
 [System.Serializable]
@@ -22,38 +27,6 @@ public class Line
     [SerializeField]
     public float rotation;
 
-    /*public Line(Node start, Node end)
-    {
-        startNode = start;
-        endNode = end;
-
-        Node targetNode = (endNode-startNode);
-        forwardLocal = targetNode.position.normalized;
-
-        if(forwardLocal.x != startNode.position.x && forwardLocal.z != startNode.position.z)
-        {
-            rightLocalOri.x = forwardLocal.z;
-            rightLocalOri.z = -forwardLocal.x;
-            rightLocalOri.y = 0;
-            rightLocalOri = rightLocalOri.normalized;
-        }
-        else if(forwardLocal.x == startNode.position.x && forwardLocal.z == startNode.position.z)
-        {
-            rightLocalOri = Vector3.right*targetNode.position.y/Mathf.Abs(targetNode.position.y);
-        }
-        else if(forwardLocal.y == startNode.position.y && forwardLocal.z == startNode.position.z)
-        {
-            rightLocalOri = -Vector3.forward*targetNode.position.x/Mathf.Abs(targetNode.position.x);
-        }
-        else if(forwardLocal.y == startNode.y && forwardLocal.x == startNode.x)
-        {
-            rightLocalOri = Vector3.right*targetNode.x/Mathf.Abs(targetNode.x);
-        }
-
-        rightLocal = rightLocalOri;
-        
-        upLocal = Vector3.Cross(forwardLocal, rightLocal).normalized;
-    }*/
     public Line(int _n1, int _n2)
     {
         _lineProp.node1 = _n1;

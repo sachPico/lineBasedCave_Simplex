@@ -28,25 +28,30 @@ public class DensityGenerator : MonoBehaviour
 {
     float timeDuration, timeStart, totalTimeElapsed;
     public GameObject generatedMeshObjectsHolder;
+
+    [Header("Compute shaders")]
+    public ComputeShader _marchingCubeShader;
+    public ComputeShader _densityShader;
+    public int numVoxelPerThread;
+
     [Header("Volume data parameter")]
+    public bool isWorldSpaceNoise;
     public float isoLevel;
+    //[Range(0,1)]
+    public float smoothingFactor;
     [Range(0,1)]
     public float noiseIntensity;
     public float frequency;
     public float lacunarity;
     
     public float noiseScale;
-
-    [Header("Compute shaders")]
-    public ComputeShader _marchingCubeShader;
-    public ComputeShader _densityShader;
     
     [Header("Generated meshes")]
     public Material material;
     public Vector3Int numberOfGeneratedMeshObject = Vector3Int.one;
     int generatedMeshCount;
     GeneratedMeshProperties _generatedMeshObject;
-    //public bool showGizmos, showVoxelDensity, showGeneratedVertexInfo;
+    public bool showGizmos, showVoxelDensity, showGeneratedVertexInfo;
 
     [HideInInspector]
     public ComputeBuffer _pointsBuffer, _linePropBuffer, _nodePositionBuffer;
@@ -55,6 +60,8 @@ public class DensityGenerator : MonoBehaviour
     
     bool isLoaded = false;
     Vector4[] _pointsDensity;
+    Vector3Int numThreadGroup;
+    const int numThreads = 8;
     ComputeBuffer _computeBuffer, _resultBuffer, _meshBuffer, _triCountBuffer;
     Mesh _generatedMesh;
     
@@ -68,9 +75,9 @@ public class DensityGenerator : MonoBehaviour
     void SetGeneralInputs(ComputeShader shader)
     {
         shader.SetBuffer(0, "samplePoints", _pointsBuffer);
-        shader.SetInt("numVertexX",_voxel.numVoxelX+1);
-        shader.SetInt("numVertexY",_voxel.numVoxelY+1);
-        shader.SetInt("numVertexZ",_voxel.numVoxelZ+1);
+        shader.SetInt("numVertexX",_voxel.numVoxel.x+1);
+        shader.SetInt("numVertexY",_voxel.numVoxel.y+1);
+        shader.SetInt("numVertexZ",_voxel.numVoxel.z+1);
         shader.SetFloat("voxelSize", _voxel.size);
         shader.SetFloat("isoLevel", isoLevel);
     }
@@ -81,10 +88,10 @@ public class DensityGenerator : MonoBehaviour
     {
         for(int i=0; i<_pointsDensity.Length; i++)
         {
-            //if(_pointsDensity[i].w==-1)//&&_pointsDensity[i].w!=1)
-            //{
+            if(_pointsDensity[i].w>-1)//&&_pointsDensity[i].w!=1)
+            {
                 Debug.Log("Density at index "+i+" is "+_pointsDensity[i].w+ " at position "+_pointsDensity[i].x+", "+_pointsDensity[i].y+", "+_pointsDensity[i].z+".");
-            //}
+            }
         }
     }
 
@@ -125,13 +132,17 @@ public class DensityGenerator : MonoBehaviour
         InitGeneratedMesh();
         Vector3 offset = Vector3.zero;
         int index;
-        //_pointsBuffer = new ComputeBuffer(_voxel.totalVertex, 16);
         
-        //_linePropBuffer = new ComputeBuffer(_lineGenerator.line.Count, sizeof(int)*2+24);
-        //_nodePositionBuffer = new ComputeBuffer(_lineGenerator.node.Count, 20);
+        //Buffer for sample points. Value for second parameter is based on Vector4 size in byte
         _pointsBuffer = new ComputeBuffer(_voxel.totalVertex, 16);
-        _linePropBuffer = new ComputeBuffer(_lineGenerator.line.Count, sizeof(int)*2+24);
+        //Buffer for line data. Value for second parameter is based on LineProperties struct's size in byte
+        _linePropBuffer = new ComputeBuffer(_lineGenerator.line.Count, 52);
+        //Buffer for line's node data. Value for second parameter is based on NodeProperties struct's size in byte
         _nodePositionBuffer = new ComputeBuffer(_lineGenerator.node.Count, 20);
+
+        numThreadGroup.x = Mathf.CeilToInt(_voxel.numVertex.x/numThreads)+1;
+        numThreadGroup.y = Mathf.CeilToInt(_voxel.numVertex.y/numThreads)+1;
+        numThreadGroup.z = Mathf.CeilToInt(_voxel.numVertex.z/numThreads)+1;
 
         for(int k=0; k<numberOfGeneratedMeshObject.z; k++)
         {
@@ -152,10 +163,13 @@ public class DensityGenerator : MonoBehaviour
 
                     _densityShader.SetBuffer(0, "nodeProps", _nodePositionBuffer);
                     _densityShader.SetBuffer(0, "lineProps", _linePropBuffer);
+                    _densityShader.SetBool("isWorldSpaceNoise", isWorldSpaceNoise);
                     _densityShader.SetFloat("noiseIntensity", noiseIntensity);
                     _densityShader.SetFloat("noiseScale", noiseScale);
+                    _densityShader.SetFloat("smoothingFactor", smoothingFactor);
                     _densityShader.SetVector("offset", offset);
-                    _densityShader.Dispatch(0,_voxel.numVoxelX+1,_voxel.numVoxelY+1,_voxel.numVoxelZ+1);
+                    _densityShader.Dispatch(0,numThreadGroup.x,numThreadGroup.y,numThreadGroup.z);
+                    //_densityShader.Dispatch(0,_voxel.numVoxel.x+1,_voxel.numVoxel.y+1,_voxel.numVoxel.z+1);
                     
                     _pointsDensity = new Vector4[_voxel.totalVertex];
                     _pointsBuffer.GetData(_pointsDensity);
@@ -165,8 +179,8 @@ public class DensityGenerator : MonoBehaviour
                 }
             }
         }
-        Debug.Log("Total time elapsed: "+ totalTimeElapsed);
-        //if(showGeneratedVertexInfo) ShowVoidVertex();
+        //Debug.Log("Total time elapsed: "+ totalTimeElapsed);
+        if(showGeneratedVertexInfo) ShowVoidVertex();
         ReleaseBuffers();
     }
 
@@ -180,7 +194,7 @@ public class DensityGenerator : MonoBehaviour
         SetGeneralInputs(_marchingCubeShader);
         _marchingCubeShader.SetBuffer(0, "triangles", _meshBuffer);
         _marchingCubeShader.SetFloat("isoLevel", isoLevel);
-        _marchingCubeShader.Dispatch(0,_voxel.numVoxelX, _voxel.numVoxelY, _voxel.numVoxelZ);
+        _marchingCubeShader.Dispatch(0,_voxel.numVoxel.x, _voxel.numVoxel.y, _voxel.numVoxel.z);
 
         ComputeBuffer.CopyCount (_meshBuffer, _triCountBuffer, 0);
         int[] triCountArray = { 0 };
@@ -219,23 +233,23 @@ public class DensityGenerator : MonoBehaviour
         //ReleaseBuffers();
         timeDuration = (float)System.DateTime.Now.Second + ((float)System.DateTime.Now.Millisecond/1000) - timeStart;
         totalTimeElapsed += timeDuration;
-        Debug.Log("Duration: "+ timeDuration);
+        //Debug.Log("Duration: "+ timeDuration);
         //Debug.Log("Mesh is generated successfully");
     }
 
     void GizmosDrawSquare(int index)
     {
         Gizmos.color = new Color(_pointsDensity[index].w,_pointsDensity[index].w,_pointsDensity[index].w);
-        Gizmos.DrawSphere(new Vector3(_pointsDensity[index].x,_pointsDensity[index].y,_pointsDensity[index].z), 0.01f);
+        Gizmos.DrawSphere(new Vector3(_pointsDensity[index].x,_pointsDensity[index].y,_pointsDensity[index].z), _voxel.size/4);
 
         Gizmos.color = new Color(_pointsDensity[index+1].w,_pointsDensity[index+1].w,_pointsDensity[index+1].w);
-        Gizmos.DrawSphere(new Vector3(_pointsDensity[index+1].x,_pointsDensity[index+1].y,_pointsDensity[index+1].z), 0.01f);
+        Gizmos.DrawSphere(new Vector3(_pointsDensity[index+1].x,_pointsDensity[index+1].y,_pointsDensity[index+1].z), _voxel.size/4);
 
-        Gizmos.color = new Color(_pointsDensity[index+_voxel.numVertexX+1].w,_pointsDensity[index+_voxel.numVertexX+1].w,_pointsDensity[index+_voxel.numVertexX+1].w);
-        Gizmos.DrawSphere(new Vector3(_pointsDensity[index+_voxel.numVertexX+1].x,_pointsDensity[index+_voxel.numVertexX+1].y,_pointsDensity[index+_voxel.numVertexX+1].z), 0.01f);
+        Gizmos.color = new Color(_pointsDensity[index+_voxel.numVertex.x+1].w,_pointsDensity[index+_voxel.numVertex.x+1].w,_pointsDensity[index+_voxel.numVertex.x+1].w);
+        Gizmos.DrawSphere(new Vector3(_pointsDensity[index+_voxel.numVertex.x+1].x,_pointsDensity[index+_voxel.numVertex.x+1].y,_pointsDensity[index+_voxel.numVertex.x+1].z), _voxel.size/4);
 
-        Gizmos.color = new Color(_pointsDensity[index+_voxel.numVertexX].w,_pointsDensity[index+_voxel.numVertexX].w,_pointsDensity[index+_voxel.numVertexX].w);
-        Gizmos.DrawSphere(new Vector3(_pointsDensity[index+_voxel.numVertexX].x,_pointsDensity[index+_voxel.numVertexX].y,_pointsDensity[index+_voxel.numVertexX].z), 0.01f);
+        Gizmos.color = new Color(_pointsDensity[index+_voxel.numVertex.x].w,_pointsDensity[index+_voxel.numVertex.x].w,_pointsDensity[index+_voxel.numVertex.x].w);
+        Gizmos.DrawSphere(new Vector3(_pointsDensity[index+_voxel.numVertex.x].x,_pointsDensity[index+_voxel.numVertex.x].y,_pointsDensity[index+_voxel.numVertex.x].z), _voxel.size/4);
     }
 
     public void ReleaseBuffers()
@@ -266,11 +280,11 @@ public class DensityGenerator : MonoBehaviour
             }
         }
         
-        /*if(_pointsDensity!=null && showGizmos)
+        if(_pointsDensity!=null && showGizmos)
         {
             if(showVoxelDensity)
             {
-                int id = _voxel.xGrid + (_voxel.zGrid*(_voxel.numVoxelX+1)) + (_voxel.yGrid*_voxel.totalVertexLayer);
+                int id = _voxel.voxelGrid.x + (_voxel.voxelGrid.z*(_voxel.numVoxel.x+1)) + (_voxel.voxelGrid.y*_voxel.totalVertexLayer);
                 GizmosDrawSquare(id);
 
                 id += _voxel.totalVertexLayer;
@@ -283,11 +297,11 @@ public class DensityGenerator : MonoBehaviour
                     if(_pointsDensity[i].w >= isoLevel)
                     {
                         Gizmos.color = new Color(_pointsDensity[i].w,_pointsDensity[i].w,_pointsDensity[i].w);
-                        Gizmos.DrawSphere(new Vector3(_pointsDensity[i].x,_pointsDensity[i].y,_pointsDensity[i].z), 0.01f);
+                        Gizmos.DrawSphere(new Vector3(_pointsDensity[i].x,_pointsDensity[i].y,_pointsDensity[i].z), _voxel.size/8);
                     }
                 }
             }
-        }*/
+        }
     }
 
     public void OnValidate()
@@ -299,6 +313,9 @@ public class DensityGenerator : MonoBehaviour
             isLoaded=true;
             EditorApplication.quitting+=ReleaseBuffers;
         }
-        
+        numVoxelPerThread = Mathf.Clamp(numVoxelPerThread, 1, _voxel.numVoxel.x);
+        numVoxelPerThread = Mathf.Clamp(numVoxelPerThread, 1, _voxel.numVoxel.y);
+        numVoxelPerThread = Mathf.Clamp(numVoxelPerThread, 1, _voxel.numVoxel.z);
+        GenerateDensity();
     }
 }

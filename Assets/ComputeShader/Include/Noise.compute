@@ -73,7 +73,7 @@ static float dot(int4 g, float x, float y, float z, float w)
 }
 
 // 2D simplex noise
-static float noise(float xin, float yin)
+static float noise2D(float xin, float yin)
 {
     SetPerm();
     float n0, n1, n2; // Noise contributions from the three corners
@@ -131,7 +131,7 @@ static float noise(float xin, float yin)
 }
 
 // 3D simplex noise
-static float noise(float xin, float yin, float zin)
+static float noise3D(float xin, float yin, float zin)
 {
     SetPerm();
     float n0, n1, n2, n3; // Noise contributions from the four corners
@@ -215,7 +215,7 @@ static float noise(float xin, float yin, float zin)
     return 32.0*(n0 + n1 + n2 + n3);
 }
 // 4D simplex noise
-float noise(float x, float y, float z, float w)
+float noise4D(float x, float y, float z, float w)
 {
     SetPerm();
     // The skewing and unskewing factors are hairy again for the 4D case
