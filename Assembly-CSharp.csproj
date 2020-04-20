@@ -59,8 +59,8 @@
      <Compile Include="Assets\Voxel.cs" />
      <None Include="Assets\ComputeShader\Include\Inputs.compute" />
      <None Include="Assets\ComputeShader\Include\MarchTables.compute" />
+     <None Include="Assets\ComputeShader\Include\SimplexNoise.compute" />
      <None Include="Assets\ComputeShader\TestDensityShader.compute" />
-     <None Include="Assets\ComputeShader\Include\Noise.compute" />
      <None Include="Assets\ComputeShader\TestComputeShader.compute" />
  <Reference Include="Unity.Timeline.Editor">
  <HintPath>C:/Users/win10/Documents/Unity/TA/Procedural Cave Generation/PathOpenSimplex/Library/ScriptAssemblies/Unity.Timeline.Editor.dll</HintPath>

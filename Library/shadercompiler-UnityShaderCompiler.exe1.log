@@ -1,5 +1,44 @@
 Base path: 'C:/Program Files/2019.3.0f3/Editor/Data', plugins path 'C:/Program Files/2019.3.0f3/Editor/Data/PlaybackEngines'
 Cmd: initializeCompiler
 Cmd: compileComputeKernel
+  error: 1 plat 4 at TestComputeShader.compute(59): signed/unsigned mismatch, unsigned assumed
+  api=4 insize=3025 outsize=71408 ok=1
+Cmd: compileComputeKernel
   error: 1 plat 4 at (0): Program 'CSMain', warning X4714: sum of temp registers and indexable temp registers times 512 threads exceeds the recommended total 16384.  Performance may be reduced
-  api=4 insize=6426 outsize=26784 ok=1
+  error: 1 plat 4 at TestDensityShader.compute(179): signed/unsigned mismatch, unsigned assumed
+  api=4 insize=7089 outsize=26458 ok=1
+Cmd: compileComputeKernel
+  api=4 insize=6988 outsize=2862 ok=1
+Cmd: compileComputeKernel
+  api=4 insize=7158 outsize=3194 ok=1
+Cmd: compileComputeKernel
+  api=4 insize=7332 outsize=2510 ok=1
+Cmd: compileComputeKernel
+  error: 2 plat 4 at TestDensityShader.compute(109): undeclared identifier 'closestNodeA'
+  api=4 insize=6898 outsize=0 ok=0
+Cmd: compileComputeKernel
+  api=4 insize=7261 outsize=2973 ok=1
+Cmd: compileComputeKernel
+  error: 2 plat 4 at TestDensityShader.compute(137): undeclared identifier 'orthogonalProjectionToClosestLine'
+  api=4 insize=7257 outsize=0 ok=0
+Cmd: compileComputeKernel
+  api=4 insize=7005 outsize=2814 ok=1
+Cmd: compileComputeKernel
+  api=4 insize=7003 outsize=2862 ok=1
+Cmd: compileComputeKernel
+  api=4 insize=6960 outsize=3194 ok=1
+Cmd: compileComputeKernel
+  api=4 insize=6963 outsize=3210 ok=1
+Cmd: compileComputeKernel
+  api=4 insize=7178 outsize=3738 ok=1
+Cmd: compileComputeKernel
+  api=4 insize=7034 outsize=3346 ok=1
+Cmd: compileComputeKernel
+  api=4 insize=7270 outsize=3290 ok=1
+Cmd: compileComputeKernel
+  api=4 insize=7140 outsize=3394 ok=1
+Cmd: compileComputeKernel
+  error: 2 plat 4 at TestDensityShader.compute(160): syntax error: unexpected token 'return'
+  api=4 insize=6979 outsize=0 ok=0
+Cmd: compileComputeKernel
+  api=4 insize=6962 outsize=2850 ok=1

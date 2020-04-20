@@ -1,6 +1,6 @@
 ﻿#pragma kernel CSMain
 #include "/Include/Inputs.compute"
-#include "/Include/Noise.compute"
+#include "/Include/SimplexNoise.compute"
 
 struct LineProperties
 {
@@ -22,6 +22,7 @@ float1 noiseIntensity;
 float3 offset;
 float1 noiseScale;
 
+StructuredBuffer<float3> noiseOffset;
 RWStructuredBuffer<NodeProperties> nodeProps;
 RWStructuredBuffer<LineProperties> lineProps;
 
@@ -49,11 +50,20 @@ float1 Falloff(float1 dist, float1 minR, float1 maxR)
     float1 fV = (maxR-dist)/(maxR-minR);
     if(fV<0) return -1;
     else return clamp(fV,0,1);
+    return 1;
 }
 
 float1 EndToEndDensity(NodeProperties np, int spID)
 {
-    return clamp(Falloff(length(samplePoints[spID].xyz-np.position), 0, np.maxRadius)*(1+smoothingFactor),0,1);
+    if(length(samplePoints[spID].xyz-np.position)<np.maxRadius)
+    {
+        return 1;//isoLevel;
+    }
+    else
+    {
+        return -1;
+    }
+    //return clamp(Falloff(length(samplePoints[spID].xyz-np.position), 0, np.maxRadius),0,1);
 }
 
 int GetClosestLineID(float3 sp)
@@ -87,14 +97,13 @@ int GetClosestLineID(float3 sp)
         nodeBToSample = sp.xyz - nB.position;
         orthogonalProjection = dot(nodeAToSample, normalize(nB.position-nA.position));
         sampleToLine = sqrt(pow(length(nodeAToSample),2)-pow(orthogonalProjection,2));
-        interpolatedRadius = (orthogonalProjection+lp.AC)/(lp.lineLength+lp.AC-lp.BD)*(lp.DF-lp.CE)+lp.CE;
+        //interpolatedRadius = (orthogonalProjection+lp.AC)/(lp.lineLength+lp.AC-lp.BD)*(lp.DF-lp.CE)+lp.CE;
 
         if(sampleToLine < closestDist)//&& sampleToLine <= interpolatedRadius && orthogonalProjection >= -lp.AC && orthogonalProjection <= lp.lineLength-lp.BD)
         {
             closestDist = sampleToLine;
             closestLineIndex=i;
         }
-        
     }
     return closestLineIndex;
     
@@ -127,34 +136,37 @@ float1 SetDensity(int index)
     normalizedLine = normalize(closestNodeB.position-closestNodeA.position);
     orthogonalProjectionToClosestLine = dot(samplePoints[index].xyz-closestNodeA.position, normalizedLine);
 
-    if(orthogonalProjectionToClosestLine<-closestLineProps.AC)
+    if(orthogonalProjectionToClosestLine<=0)//-closestLineProps.AC)
     {
         densityValue = EndToEndDensity(closestNodeA, index);
+        //return -1;
     }
-    else if(orthogonalProjectionToClosestLine>closestLineProps.lineLength-closestLineProps.BD)
+    else if(orthogonalProjectionToClosestLine>=closestLineProps.lineLength)//-closestLineProps.BD)
     {
         densityValue = EndToEndDensity(closestNodeB, index);
+        //return -1;
     }
     else//if(orthogonalProjectionToClosestLine>=-closestNodeA.maxRadius && orthogonalProjectionToClosestLine<=closestLineProps.lineLength+closestNodeA.maxRadius)
     {
+        //return -1;
         float3 orthoProject = closestNodeA.position+(orthogonalProjectionToClosestLine * normalizedLine);
         float1 dist = length(orthoProject - samplePoints[index].xyz);
 
         float1 interpolatedMaxRadius, interpolatedMinRadius;
         interpolatedMaxRadius = closestLineProps.CE + ((orthogonalProjectionToClosestLine+closestLineProps.AC)/(closestLineProps.lineLength+closestLineProps.AC-closestLineProps.BD) * (closestLineProps.DF - closestLineProps.CE));
         
-        falloffValue = Falloff(dist, 0, interpolatedMaxRadius);//float1 falloffValue = ;
-        densityValue = clamp(falloffValue * (1+smoothingFactor),0,1);
-        /*if(falloffValue !=-1)
+        if(dist < interpolatedMaxRadius)
         {
-            return falloffValue + (noise(noiseInput.x,noiseInput.y,noiseInput.z)*noiseIntensity);
+            falloffValue = Falloff(dist, 0, interpolatedMaxRadius);//float1 falloffValue = ;
+            densityValue = 1;//falloffValue;//clamp(falloffValue * (1+smoothingFactor),0,1);
         }
         else
         {
-            return -1;
-        }*/
+            densityValue = -1;
+        }
     }
-    float3 noiseInput;
+
+    /*float3 noiseInput;
     if(isWorldSpaceNoise)
     {
         noiseInput = samplePoints[index].xyz / noiseScale;
@@ -165,8 +177,14 @@ float1 SetDensity(int index)
         noiseInput.x = dot(samplePoints[index].xyz-closestNodeA.position, closestLineProps.xLocal) / noiseScale;
         noiseInput.y = dot(samplePoints[index].xyz-closestNodeA.position, closestLineProps.yLocal) / noiseScale;
     }
-    return densityValue + (noise3D(noiseInput.x,noiseInput.y,noiseInput.z)*noiseIntensity);
-    
+    float noiseValue;
+    for(int i=0; i<noiseOffset.Length; i++)
+    {
+        noiseValue = noise3D(noiseInput.x + noiseOffset[i].x, noiseInput.y + noiseOffset[i].y, noiseInput.z + noiseOffset[i].z);
+    }
+    noiseValue /= noiseOffset.Length;
+    return densityValue + (noiseValue*noiseIntensity);*/
+    return densityValue;
 }
 
 void SetPosition(int3 coord)

@@ -1,14 +1,229 @@
 Base path: 'C:/Program Files/2019.3.0f3/Editor/Data', plugins path 'C:/Program Files/2019.3.0f3/Editor/Data/PlaybackEngines'
 Cmd: initializeCompiler
 Cmd: preprocessCompute
-  insize=6427 outsize=6426 ok=1
+  insize=3026 outsize=3025 ok=1
 Cmd: preprocessCompute
-  insize=6522 outsize=6521 ok=1
+  insize=6710 outsize=6709 ok=1
 Cmd: compileComputeKernel
-  error: 2 plat 4 at TestDensityShader.compute(183): undeclared identifier 'numVertex'
-  api=4 insize=6521 outsize=0 ok=0
+  error: 1 plat 4 at TestDensityShader.compute(169): signed/unsigned mismatch, unsigned assumed
+  error: 2 plat 4 at TestDensityShader.compute(174): variable 'densityValue' used without having been completely initialized
+  api=4 insize=6709 outsize=0 ok=0
 Cmd: preprocessCompute
-  insize=6519 outsize=6518 ok=1
+  insize=7090 outsize=7089 ok=1
+Cmd: preprocessCompute
+  insize=7099 outsize=7098 ok=1
+Cmd: preprocessCompute
+  insize=7101 outsize=7100 ok=1
 Cmd: compileComputeKernel
   error: 1 plat 4 at (0): Program 'CSMain', warning X4714: sum of temp registers and indexable temp registers times 512 threads exceeds the recommended total 16384.  Performance may be reduced
-  api=4 insize=6518 outsize=26922 ok=1
+  error: 1 plat 4 at TestDensityShader.compute(179): signed/unsigned mismatch, unsigned assumed
+  api=4 insize=7100 outsize=25878 ok=1
+Cmd: preprocessCompute
+  insize=6899 outsize=6898 ok=1
+Cmd: preprocessCompute
+  insize=6943 outsize=6942 ok=1
+Cmd: preprocessCompute
+  insize=6969 outsize=6968 ok=1
+Cmd: compileComputeKernel
+  error: 2 plat 4 at TestDensityShader.compute(112): 'SetDensity': Not all control paths return a value
+  api=4 insize=6968 outsize=0 ok=0
+Cmd: preprocessCompute
+  insize=6989 outsize=6988 ok=1
+Cmd: preprocessCompute
+  insize=7025 outsize=7024 ok=1
+Cmd: preprocessCompute
+  insize=6990 outsize=6989 ok=1
+Cmd: compileComputeKernel
+  api=4 insize=6989 outsize=2862 ok=1
+Cmd: preprocessCompute
+  insize=6992 outsize=6991 ok=1
+Cmd: compileComputeKernel
+  api=4 insize=6991 outsize=2862 ok=1
+Cmd: preprocessCompute
+  insize=6994 outsize=6993 ok=1
+Cmd: preprocessCompute
+  insize=7159 outsize=7158 ok=1
+Cmd: preprocessCompute
+  insize=7163 outsize=7162 ok=1
+Cmd: compileComputeKernel
+  api=4 insize=7162 outsize=3206 ok=1
+Cmd: preprocessCompute
+  insize=7308 outsize=7307 ok=1
+Cmd: preprocessCompute
+  insize=7310 outsize=7309 ok=1
+Cmd: preprocessCompute
+  insize=7283 outsize=7282 ok=1
+Cmd: compileComputeKernel
+  error: 2 plat 4 at TestDensityShader.compute(155): undeclared identifier 'dist'
+  api=4 insize=7282 outsize=0 ok=0
+Cmd: preprocessCompute
+  insize=7298 outsize=7297 ok=1
+Cmd: preprocessCompute
+  insize=7302 outsize=7301 ok=1
+Cmd: preprocessCompute
+  insize=7306 outsize=7305 ok=1
+Cmd: preprocessCompute
+  insize=7333 outsize=7332 ok=1
+Cmd: preprocessCompute
+  insize=7333 outsize=7332 ok=1
+Cmd: preprocessCompute
+  insize=7047 outsize=7046 ok=1
+Cmd: preprocessCompute
+  insize=6945 outsize=6944 ok=1
+Cmd: preprocessCompute
+  insize=6899 outsize=6898 ok=1
+Cmd: preprocessCompute
+  insize=6943 outsize=6942 ok=1
+Cmd: compileComputeKernel
+  error: 2 plat 21 at (0): Unknown parameter type (0) for closestNodeA
+  error: 2 plat 21 at (0): Unknown parameter type (0) for closestNodeB
+  api=4 insize=6942 outsize=0 ok=0
+Cmd: preprocessCompute
+  insize=7301 outsize=7300 ok=1
+Cmd: preprocessCompute
+  insize=7237 outsize=7236 ok=1
+Cmd: compileComputeKernel
+  error: 2 plat 4 at TestDensityShader.compute(124): invalid subscript 'maxRadius'
+  api=4 insize=7236 outsize=0 ok=0
+Cmd: preprocessCompute
+  insize=7238 outsize=7237 ok=1
+Cmd: compileComputeKernel
+  api=4 insize=7237 outsize=2894 ok=1
+Cmd: preprocessCompute
+  insize=7262 outsize=7261 ok=1
+Cmd: preprocessCompute
+  insize=7268 outsize=7267 ok=1
+Cmd: compileComputeKernel
+  api=4 insize=7267 outsize=2973 ok=1
+Cmd: preprocessCompute
+  insize=7256 outsize=7255 ok=1
+Cmd: preprocessCompute
+  insize=7258 outsize=7257 ok=1
+Cmd: preprocessCompute
+  insize=7293 outsize=7292 ok=1
+Cmd: preprocessCompute
+  insize=7343 outsize=7342 ok=1
+Cmd: compileComputeKernel
+  api=4 insize=7342 outsize=3041 ok=1
+Cmd: preprocessCompute
+  insize=7006 outsize=7005 ok=1
+Cmd: preprocessCompute
+  insize=7004 outsize=7003 ok=1
+Cmd: preprocessCompute
+  insize=6830 outsize=6829 ok=1
+Cmd: preprocessCompute
+  insize=6960 outsize=6959 ok=1
+Cmd: compileComputeKernel
+  error: 2 plat 4 at TestDensityShader.compute(93): undeclared identifier 'lineLength'
+  api=4 insize=6959 outsize=0 ok=0
+Cmd: preprocessCompute
+  insize=6963 outsize=6962 ok=1
+Cmd: preprocessCompute
+  insize=6961 outsize=6960 ok=1
+Cmd: preprocessCompute
+  insize=6962 outsize=6961 ok=1
+Cmd: compileComputeKernel
+  api=4 insize=6961 outsize=3194 ok=1
+Cmd: preprocessCompute
+  insize=6964 outsize=6963 ok=1
+Cmd: preprocessCompute
+  insize=7026 outsize=7025 ok=1
+Cmd: preprocessCompute
+  insize=7179 outsize=7178 ok=1
+Cmd: preprocessCompute
+  insize=7191 outsize=7190 ok=1
+Cmd: preprocessCompute
+  insize=7192 outsize=7191 ok=1
+Cmd: preprocessCompute
+  insize=7037 outsize=7036 ok=1
+Cmd: compileComputeKernel
+  api=4 insize=7036 outsize=3346 ok=1
+Cmd: preprocessCompute
+  insize=7035 outsize=7034 ok=1
+Cmd: preprocessCompute
+  insize=7042 outsize=7041 ok=1
+Cmd: preprocessCompute
+  insize=7046 outsize=7045 ok=1
+Cmd: compileComputeKernel
+  api=4 insize=7045 outsize=3394 ok=1
+Cmd: preprocessCompute
+  insize=7271 outsize=7270 ok=1
+Cmd: preprocessCompute
+  insize=7273 outsize=7272 ok=1
+Cmd: preprocessCompute
+  insize=7262 outsize=7261 ok=1
+Cmd: compileComputeKernel
+  api=4 insize=7261 outsize=3306 ok=1
+Cmd: preprocessCompute
+  insize=7276 outsize=7275 ok=1
+Cmd: compileComputeKernel
+  api=4 insize=7275 outsize=3038 ok=1
+Cmd: preprocessCompute
+  insize=7114 outsize=7113 ok=1
+Cmd: preprocessCompute
+  insize=7118 outsize=7117 ok=1
+Cmd: compileComputeKernel
+  api=4 insize=7117 outsize=3038 ok=1
+Cmd: preprocessCompute
+  insize=7197 outsize=7196 ok=1
+Cmd: preprocessCompute
+  insize=7197 outsize=7196 ok=1
+Cmd: preprocessCompute
+  insize=7329 outsize=7328 ok=1
+Cmd: preprocessCompute
+  insize=7137 outsize=7136 ok=1
+Cmd: preprocessCompute
+  insize=7141 outsize=7140 ok=1
+Cmd: preprocessCompute
+  insize=7148 outsize=7147 ok=1
+Cmd: compileComputeKernel
+  api=4 insize=7147 outsize=3358 ok=1
+Cmd: preprocessCompute
+  insize=7188 outsize=7187 ok=1
+Cmd: preprocessCompute
+  insize=6968 outsize=6967 ok=1
+Cmd: preprocessCompute
+  insize=6980 outsize=6979 ok=1
+Cmd: preprocessCompute
+  insize=6981 outsize=6980 ok=1
+Cmd: compileComputeKernel
+  error: 2 plat 4 at TestDensityShader.compute(160): syntax error: unexpected token 'return'
+  api=4 insize=6980 outsize=0 ok=0
+Cmd: preprocessCompute
+  insize=7081 outsize=7080 ok=1
+Cmd: preprocessCompute
+  insize=6888 outsize=6887 ok=1
+Cmd: compileComputeKernel
+  error: 1 plat 4 at (0): Program 'CSMain', warning X4714: sum of temp registers and indexable temp registers times 512 threads exceeds the recommended total 16384.  Performance may be reduced
+  error: 1 plat 4 at TestDensityShader.compute(180): signed/unsigned mismatch, unsigned assumed
+  api=4 insize=6887 outsize=27106 ok=1
+Cmd: preprocessCompute
+  insize=6901 outsize=6900 ok=1
+Cmd: compileComputeKernel
+  error: 1 plat 4 at (0): Program 'CSMain', warning X4714: sum of temp registers and indexable temp registers times 512 threads exceeds the recommended total 16384.  Performance may be reduced
+  error: 1 plat 4 at TestDensityShader.compute(180): signed/unsigned mismatch, unsigned assumed
+  api=4 insize=6900 outsize=27106 ok=1
+Cmd: preprocessCompute
+  insize=6888 outsize=6887 ok=1
+Cmd: preprocessCompute
+  insize=6892 outsize=6891 ok=1
+Cmd: preprocessCompute
+  insize=6922 outsize=6921 ok=1
+Cmd: preprocessCompute
+  insize=7085 outsize=7084 ok=1
+Cmd: preprocessCompute
+  insize=6940 outsize=6939 ok=1
+Cmd: compileComputeKernel
+  api=4 insize=6939 outsize=3414 ok=1
+Cmd: preprocessCompute
+  insize=6944 outsize=6943 ok=1
+Cmd: compileComputeKernel
+  api=4 insize=6943 outsize=3358 ok=1
+Cmd: preprocessCompute
+  insize=6963 outsize=6962 ok=1
+Cmd: preprocessCompute
+  insize=6967 outsize=6966 ok=1
+Cmd: compileComputeKernel
+  api=4 insize=6966 outsize=2826 ok=1
+Cmd: preprocessCompute
+  insize=6965 outsize=6964 ok=1

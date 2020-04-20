@@ -31,7 +31,7 @@ public class LineEditor : Editor
         //Handling every line
         for(int i=0; i<l.line.Count; i++)
         {
-            Handles.color = Color.black;
+            Handles.color = Color.blue;
             Handles.DrawLine(l.node[l.line[i]._lineProp.node1]._nodeProp.position, l.node[l.line[i]._lineProp.node2]._nodeProp.position);
             //If it's a selected line, mark its center point with red, otherwise mark it blue
             if(i==l.activeLineIndex)

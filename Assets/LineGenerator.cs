@@ -198,7 +198,11 @@ public class LineGenerator : MonoBehaviour
             UpdateNearestNodeToCylinderCenter(i);
             line[i]._lineProp.lineLength = Vector3.Magnitude(node[line[i]._lineProp.node2]._nodeProp.position-node[line[i]._lineProp.node1]._nodeProp.position);
         }
-        this.gameObject.GetComponent<DensityGenerator>().GenerateDensity();
+        DensityGenerator dg = this.gameObject.GetComponent<DensityGenerator>();//.GenerateDensity();
+        if(dg.autoUpdate)
+        {
+            dg.GenerateDensity();
+        }
     }
 
     public void UpdateNearestNodeToCylinderCenter(int lineIndex)
@@ -221,6 +225,8 @@ public class LineGenerator : MonoBehaviour
 
             line[lineIndex]._lineProp.AC = 0;
             line[lineIndex]._lineProp.BD = 0;
+            line[lineIndex]._lineProp.CE = nodeA.maxRadius;
+            line[lineIndex]._lineProp.DF = nodeA.maxRadius;
 
             return;
         }
@@ -269,7 +275,7 @@ public class LineGenerator : MonoBehaviour
                 //Draw node's max and minRadius range
                 Gizmos.color = Color.red;
                 Gizmos.DrawWireSphere(node[i]._nodeProp.position, node[i]._nodeProp.maxRadius);
-                Gizmos.color = Color.blue;
+                Gizmos.color = Color.white;
                 Gizmos.DrawWireSphere(node[i]._nodeProp.position, node[i]._nodeProp.minRadius);
             }
 

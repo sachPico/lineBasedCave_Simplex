@@ -28,17 +28,20 @@ public class DensityGenerator : MonoBehaviour
 {
     float timeDuration, timeStart, totalTimeElapsed;
     public GameObject generatedMeshObjectsHolder;
+    public bool autoUpdate;
 
     [Header("Compute shaders")]
     public ComputeShader _marchingCubeShader;
     public ComputeShader _densityShader;
-    public int numVoxelPerThread;
 
     [Header("Volume data parameter")]
     public bool isWorldSpaceNoise;
+    public int noiseSeed;
     public float isoLevel;
     //[Range(0,1)]
     public float smoothingFactor;
+    [Range(1,16)]
+    public int octaves;
     [Range(0,1)]
     public float noiseIntensity;
     public float frequency;
@@ -62,7 +65,7 @@ public class DensityGenerator : MonoBehaviour
     Vector4[] _pointsDensity;
     Vector3Int numThreadGroup;
     const int numThreads = 8;
-    ComputeBuffer _computeBuffer, _resultBuffer, _meshBuffer, _triCountBuffer;
+    ComputeBuffer _computeBuffer, _resultBuffer, _meshBuffer, _triCountBuffer, _noiseOffsetBuffer;
     Mesh _generatedMesh;
     
     void OnEnable()
@@ -123,11 +126,17 @@ public class DensityGenerator : MonoBehaviour
     //Creates sample points along its density value
     public void GenerateDensity()
     {
+        if(autoUpdate!=false)
+        {
+            return;
+        }
         Debug.ClearDeveloperConsole();
         totalTimeElapsed=0;
         timeDuration=0;
         timeStart=0;
         generatedMeshCount = numberOfGeneratedMeshObject.x*numberOfGeneratedMeshObject.y*numberOfGeneratedMeshObject.z;
+
+        var rng = new System.Random(noiseSeed);
         
         InitGeneratedMesh();
         Vector3 offset = Vector3.zero;
@@ -140,9 +149,31 @@ public class DensityGenerator : MonoBehaviour
         //Buffer for line's node data. Value for second parameter is based on NodeProperties struct's size in byte
         _nodePositionBuffer = new ComputeBuffer(_lineGenerator.node.Count, 20);
 
+        Vector3[] octaveOffset = new Vector3[octaves];
+        _pointsDensity = new Vector4[_voxel.totalVertex];
+
+        for(int i=0; i<octaves; i++)
+        {
+            octaveOffset[i] = new Vector3((float)rng.NextDouble()*2-1, (float)rng.NextDouble()*2-1, (float)rng.NextDouble()*2-1);
+        }
+        _noiseOffsetBuffer = new ComputeBuffer(octaveOffset.Length, 12);
+
         numThreadGroup.x = Mathf.CeilToInt(_voxel.numVertex.x/numThreads)+1;
         numThreadGroup.y = Mathf.CeilToInt(_voxel.numVertex.y/numThreads)+1;
         numThreadGroup.z = Mathf.CeilToInt(_voxel.numVertex.z/numThreads)+1;
+
+        _linePropBuffer.SetData(_lineGenerator.GetLineProps());
+        _nodePositionBuffer.SetData(_lineGenerator.GetNodes());
+        _noiseOffsetBuffer.SetData(octaveOffset);
+
+        SetGeneralInputs(_densityShader);
+        _densityShader.SetBuffer(0, "nodeProps", _nodePositionBuffer);
+        _densityShader.SetBuffer(0, "lineProps", _linePropBuffer);
+        _densityShader.SetBuffer(0,"noiseOffset", _noiseOffsetBuffer);
+        _densityShader.SetBool("isWorldSpaceNoise", isWorldSpaceNoise);
+        _densityShader.SetFloat("noiseIntensity", noiseIntensity);
+        _densityShader.SetFloat("noiseScale", noiseScale);
+        _densityShader.SetFloat("smoothingFactor", smoothingFactor);
 
         for(int k=0; k<numberOfGeneratedMeshObject.z; k++)
         {
@@ -156,22 +187,12 @@ public class DensityGenerator : MonoBehaviour
                     offset.y = j*_voxel.boundaryWorldPos.y;
                     offset.z = k*_voxel.boundaryWorldPos.z;
                     index = i + (k*numberOfGeneratedMeshObject.x) + (j*(numberOfGeneratedMeshObject.x*numberOfGeneratedMeshObject.z));
-                    SetGeneralInputs(_densityShader);
-
-                    _linePropBuffer.SetData(_lineGenerator.GetLineProps());
-                    _nodePositionBuffer.SetData(_lineGenerator.GetNodes());
-
-                    _densityShader.SetBuffer(0, "nodeProps", _nodePositionBuffer);
-                    _densityShader.SetBuffer(0, "lineProps", _linePropBuffer);
-                    _densityShader.SetBool("isWorldSpaceNoise", isWorldSpaceNoise);
-                    _densityShader.SetFloat("noiseIntensity", noiseIntensity);
-                    _densityShader.SetFloat("noiseScale", noiseScale);
-                    _densityShader.SetFloat("smoothingFactor", smoothingFactor);
+                    
                     _densityShader.SetVector("offset", offset);
+
                     _densityShader.Dispatch(0,numThreadGroup.x,numThreadGroup.y,numThreadGroup.z);
                     //_densityShader.Dispatch(0,_voxel.numVoxel.x+1,_voxel.numVoxel.y+1,_voxel.numVoxel.z+1);
                     
-                    _pointsDensity = new Vector4[_voxel.totalVertex];
                     _pointsBuffer.GetData(_pointsDensity);
 
                     //generatedMeshObjectsHolder.transform.GetChild(index).GetComponent<GeneratedMeshProperties>().Initiate();
@@ -194,7 +215,8 @@ public class DensityGenerator : MonoBehaviour
         SetGeneralInputs(_marchingCubeShader);
         _marchingCubeShader.SetBuffer(0, "triangles", _meshBuffer);
         _marchingCubeShader.SetFloat("isoLevel", isoLevel);
-        _marchingCubeShader.Dispatch(0,_voxel.numVoxel.x, _voxel.numVoxel.y, _voxel.numVoxel.z);
+        _marchingCubeShader.Dispatch(0,numThreadGroup.x, numThreadGroup.y, numThreadGroup.z);
+        //_marchingCubeShader.Dispatch(0,_voxel.numVoxel.x, _voxel.numVoxel.y, _voxel.numVoxel.z);
 
         ComputeBuffer.CopyCount (_meshBuffer, _triCountBuffer, 0);
         int[] triCountArray = { 0 };
@@ -313,9 +335,13 @@ public class DensityGenerator : MonoBehaviour
             isLoaded=true;
             EditorApplication.quitting+=ReleaseBuffers;
         }
-        numVoxelPerThread = Mathf.Clamp(numVoxelPerThread, 1, _voxel.numVoxel.x);
-        numVoxelPerThread = Mathf.Clamp(numVoxelPerThread, 1, _voxel.numVoxel.y);
-        numVoxelPerThread = Mathf.Clamp(numVoxelPerThread, 1, _voxel.numVoxel.z);
-        GenerateDensity();
+        octaves = Mathf.Clamp(octaves, 1, 16);
+        //numVoxelPerThread = Mathf.Clamp(numVoxelPerThread, 1, _voxel.numVoxel.x);
+        //numVoxelPerThread = Mathf.Clamp(numVoxelPerThread, 1, _voxel.numVoxel.y);
+        //numVoxelPerThread = Mathf.Clamp(numVoxelPerThread, 1, _voxel.numVoxel.z);
+        if(autoUpdate)
+        {
+            GenerateDensity();
+        }
     }
 }
