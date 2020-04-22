@@ -24,6 +24,7 @@ struct Triangle
     }
 }
 
+[ExecuteInEditMode]
 public class DensityGenerator : MonoBehaviour
 {
     float timeDuration, timeStart, totalTimeElapsed;
@@ -31,6 +32,7 @@ public class DensityGenerator : MonoBehaviour
     public bool autoUpdate;
 
     [Header("Compute shaders")]
+    public Vector3Int numThreadGroup;
     public ComputeShader _marchingCubeShader;
     public ComputeShader _densityShader;
 
@@ -63,7 +65,8 @@ public class DensityGenerator : MonoBehaviour
     
     bool isLoaded = false;
     Vector4[] _pointsDensity;
-    Vector3Int numThreadGroup;
+    [HideInInspector]
+    
     const int numThreads = 8;
     ComputeBuffer _computeBuffer, _resultBuffer, _meshBuffer, _triCountBuffer, _noiseOffsetBuffer;
     Mesh _generatedMesh;
@@ -71,6 +74,11 @@ public class DensityGenerator : MonoBehaviour
     void OnEnable()
     {
         
+    }
+
+    void Update()
+    {
+
     }
 
     //Deklarasi variabel untuk compute shader
@@ -158,10 +166,6 @@ public class DensityGenerator : MonoBehaviour
         }
         _noiseOffsetBuffer = new ComputeBuffer(octaveOffset.Length, 12);
 
-        numThreadGroup.x = Mathf.CeilToInt(_voxel.numVertex.x/numThreads)+1;
-        numThreadGroup.y = Mathf.CeilToInt(_voxel.numVertex.y/numThreads)+1;
-        numThreadGroup.z = Mathf.CeilToInt(_voxel.numVertex.z/numThreads)+1;
-
         _linePropBuffer.SetData(_lineGenerator.GetLineProps());
         _nodePositionBuffer.SetData(_lineGenerator.GetNodes());
         _noiseOffsetBuffer.SetData(octaveOffset);
@@ -175,7 +179,17 @@ public class DensityGenerator : MonoBehaviour
         _densityShader.SetFloat("noiseScale", noiseScale);
         _densityShader.SetFloat("smoothingFactor", smoothingFactor);
 
-        for(int k=0; k<numberOfGeneratedMeshObject.z; k++)
+        for(int i=0; i<_lineGenerator.line.Count; i++)
+        {
+            timeStart = (float)System.DateTime.Now.Second + ((float)System.DateTime.Now.Millisecond/1000);
+            _densityShader.Dispatch(0,numThreadGroup.x,numThreadGroup.y,numThreadGroup.z);
+            //_densityShader.Dispatch(0,_voxel.numVoxel.x+1,_voxel.numVoxel.y+1,_voxel.numVoxel.z+1);                
+            _pointsBuffer.GetData(_pointsDensity);
+            //generatedMeshObjectsHolder.transform.GetChild(index).GetComponent<GeneratedMeshProperties>().Initiate();
+                    
+        }
+
+        /*for(int k=0; k<numberOfGeneratedMeshObject.z; k++)
         {
             for(int j=0; j<numberOfGeneratedMeshObject.y; j++)
             {
@@ -196,10 +210,11 @@ public class DensityGenerator : MonoBehaviour
                     _pointsBuffer.GetData(_pointsDensity);
 
                     //generatedMeshObjectsHolder.transform.GetChild(index).GetComponent<GeneratedMeshProperties>().Initiate();
-                    GenerateMesh(index);
+                    
                 }
             }
-        }
+        }*/
+        GenerateMesh(0);
         //Debug.Log("Total time elapsed: "+ totalTimeElapsed);
         if(showGeneratedVertexInfo) ShowVoidVertex();
         ReleaseBuffers();
@@ -276,9 +291,14 @@ public class DensityGenerator : MonoBehaviour
 
     public void ReleaseBuffers()
     {
-        if(_pointsBuffer!=null) _pointsBuffer.Release();
-        if(_meshBuffer!=null) _meshBuffer.Release();
-        if(_triCountBuffer!=null) _triCountBuffer.Release();
+        if(_triCountBuffer!=null)
+        {
+            _pointsBuffer.Release();
+            _meshBuffer.Release();
+            _triCountBuffer.Release();
+            _nodePositionBuffer.Release();
+            _noiseOffsetBuffer.Release();
+        }
     }
 
     //Tampilkan titik sampel dengan warna berdasarkan nilai density
@@ -298,6 +318,22 @@ public class DensityGenerator : MonoBehaviour
                     offset.z = k*_voxel.boundaryWorldPos.z;
                     Gizmos.color = new Color(0,0,0);
                     Gizmos.DrawWireCube(centre+offset, centre*2);
+                }
+            }
+        }
+
+        for(int k=0; k<=numThreadGroup.z; k++)
+        {
+            for(int j=0; j<=numThreadGroup.y; j++)
+            {
+                for(int i=0; i<=numThreadGroup.x; i++)
+                {
+                    offset.x = i*_voxel.boundaryWorldPos.x;
+                    offset.y = j*_voxel.boundaryWorldPos.y;
+                    offset.z = k*_voxel.boundaryWorldPos.z;
+                    Gizmos.color = Color.cyan;
+                    Gizmos.DrawLine(new Vector3(i*8*_voxel.size, 0, 0), new Vector3(i*8*_voxel.size,0,(Mathf.CeilToInt(_voxel.numVertex.z/8)+1)*_voxel.size*8));
+                    Gizmos.DrawLine(new Vector3(0, 0, k*8*_voxel.size), new Vector3((Mathf.CeilToInt(_voxel.numVertex.x/8)+1)*_voxel.size*8, 0, k*8*_voxel.size));
                 }
             }
         }

@@ -27,7 +27,7 @@ public class LineGenerator : MonoBehaviour
     public float newMaxRadius;
 
     [Header("Generated Line Properties")]
-    [SerializeField]
+    [SerializeField,HideInInspector]
     public List<Line> line = new List<Line>();
 
     [SerializeField, HideInInspector]

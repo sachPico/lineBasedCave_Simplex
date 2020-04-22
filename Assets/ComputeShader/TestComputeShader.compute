@@ -54,7 +54,7 @@ float3 interpolateVerts(float4 v1, float4 v2) {
 }
 
 [numthreads(8,8,8)]
-void GenerateMesh (uint3 id : SV_DISPATCHTHREADID)    //id = index kubus
+void GenerateMesh (int3 id : SV_DISPATCHTHREADID)    //id = index kubus
 {
     if(id.x>numVertexX || id.y>numVertexY || id.z>numVertexZ)
     {
