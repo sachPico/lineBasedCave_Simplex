@@ -6,14 +6,15 @@ public class Voxel:MonoBehaviour
 {
     static uint maxVertex = 858993459 ;
     public float size;
+    public int voxelsPerAxis;
     [Header("Unit voxel position")]
     public Vector3 voxelPosition;
     public Vector3Int voxelGrid;
     [Header("Voxel boundary center")]
     public Vector3 boundaryCenter;
     public Vector3 boundaryWorldPos;
-    [Header("Voxels size")]
-    public Vector3Int numVoxel;
+    //[Header("Voxels size")]
+    //public Vector3Int numVoxel;
     public Vector3Int numVertex;
     [Space()]
     public long totalVoxel;
@@ -30,9 +31,9 @@ public class Voxel:MonoBehaviour
 
     public void SetBoundaryCenter()
     {
-        boundaryCenter.x = size/2f*numVoxel.x;
-        boundaryCenter.y = size/2f*numVoxel.y;
-        boundaryCenter.z = size/2f*numVoxel.z;
+        boundaryCenter.x = size/2f*voxelsPerAxis;
+        boundaryCenter.y = size/2f*voxelsPerAxis;
+        boundaryCenter.z = size/2f*voxelsPerAxis;
     }
 
     public void InitiateVoxelNodes()
@@ -114,26 +115,15 @@ public class Voxel:MonoBehaviour
 
     void OnValidate()
     {
-        oldNumVoxel.x = numVoxel.x;
-        oldNumVoxel.y = numVoxel.y;
-        oldNumVoxel.z = numVoxel.z;
-
-        numVoxel.x = Mathf.Clamp(numVoxel.x,1,(int)(maxVertex/(oldNumVoxel.y*oldNumVoxel.z))-2);
-        //oldNumVoxel.x = numVoxel.x;
-        numVoxel.y = Mathf.Clamp(numVoxel.y,1,(int)(maxVertex/(oldNumVoxel.x*oldNumVoxel.z))-2);
-        //oldNumVoxel.y = numVoxel.y;
-        numVoxel.z = Mathf.Clamp(numVoxel.z,1,(int)(maxVertex/(oldNumVoxel.y*oldNumVoxel.x))-2);
-        //oldNumVoxel.z = numVoxel.z;
-
-        voxelGrid.x = Mathf.Clamp(voxelGrid.x, 0, numVoxel.x-1);
-        voxelGrid.y = Mathf.Clamp(voxelGrid.y, 0, numVoxel.y-1);
-        voxelGrid.z = Mathf.Clamp(voxelGrid.z, 0, numVoxel.z-1);
-        numVertex.x = Mathf.Clamp(numVoxel.x+1, 2, 65535);
-        numVertex.y = Mathf.Clamp(numVoxel.y+1, 2, 65535);
-        numVertex.z = Mathf.Clamp(numVoxel.z+1, 2, 65535);
+        voxelGrid.x = Mathf.Clamp(voxelGrid.x, 0, voxelsPerAxis-1);
+        voxelGrid.y = Mathf.Clamp(voxelGrid.y, 0, voxelsPerAxis-1);
+        voxelGrid.z = Mathf.Clamp(voxelGrid.z, 0, voxelsPerAxis-1);
+        numVertex.x = Mathf.Clamp(voxelsPerAxis+1, 2, 65535);
+        numVertex.y = Mathf.Clamp(voxelsPerAxis+1, 2, 65535);
+        numVertex.z = Mathf.Clamp(voxelsPerAxis+1, 2, 65535);
         InitiateVoxelNodes();
         SetBoundaryCenter();
-        totalVoxel = numVoxel.x*numVoxel.y*numVoxel.z;
+        totalVoxel = voxelsPerAxis*voxelsPerAxis*voxelsPerAxis;
         totalVertexLayer = numVertex.x*numVertex.z;
         totalVertex = numVertex.y*totalVertexLayer;
         if((uint)totalVertex >= maxVertex)

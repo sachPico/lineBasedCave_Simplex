@@ -19,6 +19,7 @@ public class TestComputeShaderEditor : Editor
         //This "if" command will add "Generate Mesh" button automatically on Inspector panel
         if(GUILayout.Button("Generate Density and Mesh"))
         {
+            CSTarget.CreateBuffers();
             CSTarget.GenerateDensity();
         }
         

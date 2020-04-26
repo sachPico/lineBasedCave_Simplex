@@ -49,7 +49,7 @@ float1 Falloff(float1 dist, float1 minR, float1 maxR)
 {
     float1 fV = (maxR-dist)/(maxR-minR);
     if(fV<0) return -1;
-    else return 1;//clamp(fV,0,1);
+    else return clamp(fV,0,1);
 }
 
 float1 EndToEndDensity(NodeProperties np, int spID)
@@ -173,9 +173,9 @@ float1 SetDensity(int index)
         float1 interpolatedMaxRadius, interpolatedMinRadius;
         interpolatedMaxRadius = closestLineProps.CE + ((orthogonalProjectionToClosestLine+closestLineProps.AC)/(closestLineProps.lineLength+closestLineProps.AC-closestLineProps.BD) * (closestLineProps.DF - closestLineProps.CE));
         
-        if(dist < interpolatedMaxRadius)// && orthogonalProjectionToClosestLine>=-closestLineProps.AC && orthogonalProjectionToClosestLine<=closestLineProps.lineLength-closestLineProps.BD)
+        if(dist <= interpolatedMaxRadius)// && orthogonalProjectionToClosestLine>=-closestLineProps.AC && orthogonalProjectionToClosestLine<=closestLineProps.lineLength-closestLineProps.BD)
         {
-            //falloffValue = Falloff(dist, 0, interpolatedMaxRadius);//float1 falloffValue = ;
+            falloffValue = Falloff(dist, 0, interpolatedMaxRadius);//float1 falloffValue = ;
             densityValue = 1;//falloffValue;//clamp(falloffValue * (1+smoothingFactor),0,1);
         }
         else
@@ -184,7 +184,7 @@ float1 SetDensity(int index)
         }
     //}
 
-    /*float3 noiseInput;
+    float3 noiseInput;
     if(isWorldSpaceNoise)
     {
         noiseInput = samplePoints[index].xyz / noiseScale;
@@ -198,11 +198,11 @@ float1 SetDensity(int index)
     float noiseValue;
     for(int i=0; i<noiseOffset.Length; i++)
     {
-        noiseValue = noise3D(noiseInput.x + noiseOffset[i].x, noiseInput.y + noiseOffset[i].y, noiseInput.z + noiseOffset[i].z);
+        noiseValue += noise3D(noiseInput.x + noiseOffset[i].x, noiseInput.y + noiseOffset[i].y, noiseInput.z + noiseOffset[i].z);
     }
     noiseValue /= noiseOffset.Length;
-    return densityValue + (noiseValue*noiseIntensity);*/
-    return densityValue;
+    return noiseValue*noiseIntensity;
+    //return densityValue;
 }
 
 void SetPosition(int3 coord)

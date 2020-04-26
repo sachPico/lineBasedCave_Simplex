@@ -59,7 +59,7 @@ public class DensityGenerator : MonoBehaviour
     public bool showGizmos, showVoxelDensity, showGeneratedVertexInfo;
 
     [HideInInspector]
-    public ComputeBuffer _pointsBuffer, _linePropBuffer, _nodePositionBuffer;
+    public ComputeBuffer _pointsBuffer, _linePropBuffer, _nodePropBuffer;
     public LineGenerator _lineGenerator;
     public Voxel _voxel;
     
@@ -78,7 +78,15 @@ public class DensityGenerator : MonoBehaviour
 
     void Update()
     {
+        if (Application.isPlaying)
+        {
+            CreateBuffers();
+            GenerateDensity();
+        }
 
+        /*if (!Application.isPlaying) {
+            ReleaseBuffers ();
+        }*/
     }
 
     //Deklarasi variabel untuk compute shader
@@ -86,9 +94,9 @@ public class DensityGenerator : MonoBehaviour
     void SetGeneralInputs(ComputeShader shader)
     {
         shader.SetBuffer(0, "samplePoints", _pointsBuffer);
-        shader.SetInt("numVertexX",_voxel.numVoxel.x+1);
-        shader.SetInt("numVertexY",_voxel.numVoxel.y+1);
-        shader.SetInt("numVertexZ",_voxel.numVoxel.z+1);
+        shader.SetInt("numVertexX",_voxel.voxelsPerAxis+1);
+        shader.SetInt("numVertexY",_voxel.voxelsPerAxis+1);
+        shader.SetInt("numVertexZ",_voxel.voxelsPerAxis+1);
         shader.SetFloat("voxelSize", _voxel.size);
         shader.SetFloat("isoLevel", isoLevel);
     }
@@ -134,11 +142,10 @@ public class DensityGenerator : MonoBehaviour
     //Creates sample points along its density value
     public void GenerateDensity()
     {
-        if(autoUpdate!=false)
+        /*if(autoUpdate!=true)
         {
             return;
-        }
-        Debug.ClearDeveloperConsole();
+        }*/
         totalTimeElapsed=0;
         timeDuration=0;
         timeStart=0;
@@ -149,13 +156,15 @@ public class DensityGenerator : MonoBehaviour
         InitGeneratedMesh();
         Vector3 offset = Vector3.zero;
         int index;
+
+        CreateBuffers();
         
         //Buffer for sample points. Value for second parameter is based on Vector4 size in byte
-        _pointsBuffer = new ComputeBuffer(_voxel.totalVertex, 16);
+
         //Buffer for line data. Value for second parameter is based on LineProperties struct's size in byte
-        _linePropBuffer = new ComputeBuffer(_lineGenerator.line.Count, 52);
+        
         //Buffer for line's node data. Value for second parameter is based on NodeProperties struct's size in byte
-        _nodePositionBuffer = new ComputeBuffer(_lineGenerator.node.Count, 20);
+        
 
         Vector3[] octaveOffset = new Vector3[octaves];
         _pointsDensity = new Vector4[_voxel.totalVertex];
@@ -164,23 +173,24 @@ public class DensityGenerator : MonoBehaviour
         {
             octaveOffset[i] = new Vector3((float)rng.NextDouble()*2-1, (float)rng.NextDouble()*2-1, (float)rng.NextDouble()*2-1);
         }
-        _noiseOffsetBuffer = new ComputeBuffer(octaveOffset.Length, 12);
 
-        _linePropBuffer.SetData(_lineGenerator.GetLineProps());
-        _nodePositionBuffer.SetData(_lineGenerator.GetNodes());
-        _noiseOffsetBuffer.SetData(octaveOffset);
-
-        SetGeneralInputs(_densityShader);
-        _densityShader.SetBuffer(0, "nodeProps", _nodePositionBuffer);
-        _densityShader.SetBuffer(0, "lineProps", _linePropBuffer);
-        _densityShader.SetBuffer(0,"noiseOffset", _noiseOffsetBuffer);
-        _densityShader.SetBool("isWorldSpaceNoise", isWorldSpaceNoise);
-        _densityShader.SetFloat("noiseIntensity", noiseIntensity);
-        _densityShader.SetFloat("noiseScale", noiseScale);
-        _densityShader.SetFloat("smoothingFactor", smoothingFactor);
+        
 
         for(int i=0; i<_lineGenerator.line.Count; i++)
         {
+            _linePropBuffer.SetData(_lineGenerator.GetLineProps());
+            _nodePropBuffer.SetData(_lineGenerator.GetNodes());
+            _noiseOffsetBuffer.SetData(octaveOffset);
+
+            SetGeneralInputs(_densityShader);
+            _densityShader.SetBuffer(0, "nodeProps", _nodePropBuffer);
+            _densityShader.SetBuffer(0, "lineProps", _linePropBuffer);
+            _densityShader.SetBuffer(0,"noiseOffset", _noiseOffsetBuffer);
+            _densityShader.SetBool("isWorldSpaceNoise", isWorldSpaceNoise);
+            _densityShader.SetFloat("noiseIntensity", noiseIntensity);
+            _densityShader.SetFloat("noiseScale", noiseScale);
+            _densityShader.SetFloat("smoothingFactor", smoothingFactor);
+            
             timeStart = (float)System.DateTime.Now.Second + ((float)System.DateTime.Now.Millisecond/1000);
             _densityShader.Dispatch(0,numThreadGroup.x,numThreadGroup.y,numThreadGroup.z);
             //_densityShader.Dispatch(0,_voxel.numVoxel.x+1,_voxel.numVoxel.y+1,_voxel.numVoxel.z+1);                
@@ -215,17 +225,16 @@ public class DensityGenerator : MonoBehaviour
             }
         }*/
         GenerateMesh(0);
-        //Debug.Log("Total time elapsed: "+ totalTimeElapsed);
+        Debug.Log("Total time elapsed: "+ totalTimeElapsed);
         if(showGeneratedVertexInfo) ShowVoidVertex();
-        ReleaseBuffers();
     }
 
     public void GenerateMesh(int index)
     {
         //Simpan jumlah triangle dalam satu mesh
-        _triCountBuffer = new ComputeBuffer(1, sizeof(int), ComputeBufferType.Raw);
+        
         //Simpan data posisi triangle dalam satu mesh
-        _meshBuffer = new ComputeBuffer((int)_voxel.totalVoxel*5, 36, ComputeBufferType.Append); //36 = sizeof(float/int 4 byte) * 3(3 nilai float untuk data posisi vertex) * 3(3 nilai int untuk 3 vertex yang tersambung untuk membentuk triangle)
+        //36 = sizeof(float/int 4 byte) * 3(3 nilai float untuk data posisi vertex) * 3(3 nilai int untuk 3 vertex yang tersambung untuk membentuk triangle)
 
         SetGeneralInputs(_marchingCubeShader);
         _marchingCubeShader.SetBuffer(0, "triangles", _meshBuffer);
@@ -267,10 +276,10 @@ public class DensityGenerator : MonoBehaviour
 
         genMesh.RecalculateNormals();
         generatedMeshObjectsHolder.transform.GetChild(index).GetComponent<GeneratedMeshProperties>().RefreshMeshFilter(genMesh);
-        //ReleaseBuffers();
+        ReleaseBuffers();
         timeDuration = (float)System.DateTime.Now.Second + ((float)System.DateTime.Now.Millisecond/1000) - timeStart;
         totalTimeElapsed += timeDuration;
-        //Debug.Log("Duration: "+ timeDuration);
+        Debug.Log("Duration: "+ timeDuration);
         //Debug.Log("Mesh is generated successfully");
     }
 
@@ -293,12 +302,31 @@ public class DensityGenerator : MonoBehaviour
     {
         if(_triCountBuffer!=null)
         {
-            _pointsBuffer.Release();
+            Debug.Log("Releasing existing buffer");
             _meshBuffer.Release();
+            _pointsBuffer.Release();
             _triCountBuffer.Release();
-            _nodePositionBuffer.Release();
+            _linePropBuffer.Release();
+            _nodePropBuffer.Release();
             _noiseOffsetBuffer.Release();
         }
+    }
+
+    public void CreateBuffers()
+    {
+        if(!Application.isPlaying || (_pointsBuffer == null || _voxel.totalVertex != _pointsBuffer.count ))
+        {
+            if(Application.isPlaying)
+            {
+                ReleaseBuffers();
+            }
+        }
+        _pointsBuffer = new ComputeBuffer(_voxel.totalVertex, 16);
+        _linePropBuffer = new ComputeBuffer(_lineGenerator.line.Count, 52);
+        _nodePropBuffer = _nodePropBuffer = new ComputeBuffer(_lineGenerator.node.Count, 20);
+        _triCountBuffer = _triCountBuffer = new ComputeBuffer(1, sizeof(int), ComputeBufferType.Raw);
+        _noiseOffsetBuffer = _noiseOffsetBuffer = new ComputeBuffer(octaves, 12);
+        _meshBuffer = new ComputeBuffer((int)_voxel.totalVoxel*5, 36, ComputeBufferType.Append);
     }
 
     //Tampilkan titik sampel dengan warna berdasarkan nilai density
@@ -342,7 +370,7 @@ public class DensityGenerator : MonoBehaviour
         {
             if(showVoxelDensity)
             {
-                int id = _voxel.voxelGrid.x + (_voxel.voxelGrid.z*(_voxel.numVoxel.x+1)) + (_voxel.voxelGrid.y*_voxel.totalVertexLayer);
+                int id = _voxel.voxelGrid.x + (_voxel.voxelGrid.z*(_voxel.voxelsPerAxis+1)) + (_voxel.voxelGrid.y*_voxel.totalVertexLayer);
                 GizmosDrawSquare(id);
 
                 id += _voxel.totalVertexLayer;
@@ -366,18 +394,10 @@ public class DensityGenerator : MonoBehaviour
     {
         _lineGenerator = gameObject.GetComponent<LineGenerator>();
         _voxel = gameObject.GetComponent<Voxel>();
-        if(isLoaded==false)
-        {
-            isLoaded=true;
-            EditorApplication.quitting+=ReleaseBuffers;
-        }
         octaves = Mathf.Clamp(octaves, 1, 16);
         //numVoxelPerThread = Mathf.Clamp(numVoxelPerThread, 1, _voxel.numVoxel.x);
         //numVoxelPerThread = Mathf.Clamp(numVoxelPerThread, 1, _voxel.numVoxel.y);
         //numVoxelPerThread = Mathf.Clamp(numVoxelPerThread, 1, _voxel.numVoxel.z);
-        if(autoUpdate)
-        {
-            GenerateDensity();
-        }
+        
     }
 }
