@@ -1,8 +1,7 @@
 Base path: 'C:/Program Files/2019.3.0f3/Editor/Data', plugins path 'C:/Program Files/2019.3.0f3/Editor/Data/PlaybackEngines'
 Cmd: initializeCompiler
 Cmd: compileComputeKernel
-  api=4 insize=7932 outsize=844 ok=1
-Cmd: compileComputeKernel
-  error: 1 plat 4 at (0): Program 'CSMain', warning X4714: sum of temp registers and indexable temp registers times 512 threads exceeds the recommended total 16384.  Performance may be reduced
-  error: 1 plat 4 at TestDensityShader.compute(199): signed/unsigned mismatch, unsigned assumed
-  api=4 insize=7912 outsize=26350 ok=1
+  error: 1 plat 4 at TestDensityShader.compute(50): implicit truncation of vector type
+  error: 1 plat 4 at TestDensityShader.compute(52): implicit truncation of vector type
+  error: 1 plat 4 at TestDensityShader.compute(204): signed/unsigned mismatch, unsigned assumed
+  api=4 insize=8314 outsize=26914 ok=1

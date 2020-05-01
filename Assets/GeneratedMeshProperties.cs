@@ -21,6 +21,8 @@ public class GeneratedMeshProperties : MonoBehaviour
         {
             _meshRenderer = gameObject.AddComponent<MeshRenderer>();
         }
+        //_meshFilter.sharedMesh.indexFormat = UnityEngine.Rendering.IndexFormat.UInt32;
+        //_generatedMesh.indexFormat = UnityEngine.Rendering.IndexFormat.UInt32;
         _generatedMesh = _meshFilter.sharedMesh;
         _meshRenderer.material = mat;
     }

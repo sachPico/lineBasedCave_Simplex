@@ -1,3 +1,9 @@
 ﻿RWStructuredBuffer<float4> samplePoints;
-int1 numVertexX, numVertexY, numVertexZ;
+uint1 numVertexX, numVertexY, numVertexZ;
 float1 voxelSize, isoLevel;
+
+int GetIDFromCoord(int3 coord)
+{
+    int totalVertexLayer = numVertexX * numVertexZ;
+    return coord.x + (coord.z*numVertexX) + (coord.y*totalVertexLayer);
+}

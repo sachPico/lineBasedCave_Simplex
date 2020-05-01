@@ -4,26 +4,28 @@ using UnityEngine;
 
 public class Voxel:MonoBehaviour
 {
-    static uint maxVertex = 858993459 ;
+    static uint maxVertex = 13107 ; //sizeof(int16)/5. Five is max number of sub-mesh's vertex in marching cube combination table
     public float size;
+    [Range(1, 20)]
     public int voxelsPerAxis;
     [Header("Unit voxel position")]
     public Vector3 voxelPosition;
     public Vector3Int voxelGrid;
-    [Header("Voxel boundary center")]
+    [Header("Voxel boundary properties")]
     public Vector3 boundaryCenter;
     public Vector3 boundaryWorldPos;
     //[Header("Voxels size")]
     //public Vector3Int numVoxel;
     public Vector3Int numVertex;
     [Space()]
+    public Vector3Int numberOfGeneratedMeshObject = Vector3Int.one;
     public long totalVoxel;
     public int totalVertex;
      [Space()]
-    public bool showGizmos;
+    public bool showVoxelGridGizmos;
     [HideInInspector]
     public Node[] voxelNodes = new Node[8];
-    [HideInInspector]
+    //[HideInInspector]
     public int totalVertexLayer;
     
 
@@ -56,14 +58,14 @@ public class Voxel:MonoBehaviour
             voxelNodes[i]+=(Vector3.right*voxelGrid.x*size)+(Vector3.up*voxelGrid.y*size)+(Vector3.forward*voxelGrid.z*size);
         }*/
 
-        boundaryWorldPos.x = size*numVertex.x;
-        boundaryWorldPos.y = size*numVertex.y;
-        boundaryWorldPos.z = size*numVertex.z;
+        boundaryWorldPos.x = size*voxelsPerAxis;
+        boundaryWorldPos.y = size*voxelsPerAxis;
+        boundaryWorldPos.z = size*voxelsPerAxis;
     }
 
     void OnDrawGizmos()
     {
-        if(showGizmos)
+        if(showVoxelGridGizmos)
         {
             Gizmos.color = new Color(0,0,1,.5f);
             Gizmos.DrawCube(
@@ -75,35 +77,35 @@ public class Voxel:MonoBehaviour
                 )
                 ,Vector3.one*size
             );
-            for(int i=1; i<numVertex.x; i++)
+            for(int i=0; i<voxelsPerAxis; i++)
             {
                 Gizmos.color = Color.gray;
-                Gizmos.DrawLine(new Vector3(i*size,0,0), new Vector3(i*size,0,numVertex.z*size));
+                Gizmos.DrawLine(new Vector3(i*size,0,0), new Vector3(i*size,0,voxelsPerAxis*size));
             }
-            for(int i=1; i<numVertex.z; i++)
+            for(int i=0; i<voxelsPerAxis; i++)
             {
                 Gizmos.color = Color.gray;
-                Gizmos.DrawLine(new Vector3(0,0,i*size), new Vector3(numVertex.x*size,0,i*size));
+                Gizmos.DrawLine(new Vector3(0,0,i*size), new Vector3(voxelsPerAxis*size,0,i*size));
             }
-            for(int i=1; i<numVertex.x; i++)
+            for(int i=0; i<voxelsPerAxis; i++)
             {
                 Gizmos.color = Color.gray;
-                Gizmos.DrawLine(new Vector3(i*size,0,numVertex.z*size), new Vector3(i*size,numVertex.y*size,numVertex.z*size));
+                Gizmos.DrawLine(new Vector3(i*size,0,voxelsPerAxis*size), new Vector3(i*size,voxelsPerAxis*size,voxelsPerAxis*size));
             }
-            for(int i=1; i<numVertex.y; i++)
+            for(int i=0; i<voxelsPerAxis; i++)
             {
                 Gizmos.color = Color.gray;
-                Gizmos.DrawLine(new Vector3(0,i*size,numVertex.z*size), new Vector3(numVertex.x*size,i*size,numVertex.z*size));
+                Gizmos.DrawLine(new Vector3(0,i*size,voxelsPerAxis*size), new Vector3(voxelsPerAxis*size,i*size,voxelsPerAxis*size));
             }
-            for(int i=1; i<numVertex.z; i++)
+            for(int i=0; i<voxelsPerAxis; i++)
             {
                 Gizmos.color = Color.gray;
-                Gizmos.DrawLine(new Vector3(0,0,i*size), new Vector3(0,numVertex.y*size,i*size));
+                Gizmos.DrawLine(new Vector3(0,0,i*size), new Vector3(0,voxelsPerAxis*size,i*size));
             }
-            for(int i=1; i<numVertex.y; i++)
+            for(int i=0; i<voxelsPerAxis; i++)
             {
                 Gizmos.color = Color.gray;
-                Gizmos.DrawLine(new Vector3(0,i*size,0), new Vector3(0,i*size,numVertex.z*size));
+                Gizmos.DrawLine(new Vector3(0,i*size,0), new Vector3(0,i*size,voxelsPerAxis*size));
             }
             //Draw boundary box gizmos
             
@@ -132,9 +134,19 @@ public class Voxel:MonoBehaviour
         }
 
         var dg = this.gameObject.GetComponent<DensityGenerator>();
-        dg.numThreadGroup.x = Mathf.CeilToInt(numVertex.x/8)+1;
-        dg.numThreadGroup.y = Mathf.CeilToInt(numVertex.y/8)+1;
-        dg.numThreadGroup.z = Mathf.CeilToInt(numVertex.z/8)+1;
+        //dg.numDispatchThread.x = Mathf.CeilToInt((float)voxelsPerAxis/1);
+        //dg.numDispatchThread.y = Mathf.CeilToInt((float)voxelsPerAxis/1);
+        //dg.numDispatchThread.z = Mathf.CeilToInt((float)voxelsPerAxis/1);
+
+        /*int index = voxelGrid.x + (voxelGrid.z * numVertex.x) + (voxelGrid.y * totalVertexLayer);
+        dg.vertexDensity[0] = dg._pointsDensity[index];
+        dg.vertexDensity[1] = dg._pointsDensity[index+1];
+        dg.vertexDensity[2] = dg._pointsDensity[index+numVertex.x+1];
+        dg.vertexDensity[3] = dg._pointsDensity[index+numVertex.x];
+        dg.vertexDensity[4] = dg._pointsDensity[index+totalVertexLayer];
+        dg.vertexDensity[5] = dg._pointsDensity[index+totalVertexLayer+1];
+        dg.vertexDensity[6] = dg._pointsDensity[index+totalVertexLayer+numVertex.x+1];
+        dg.vertexDensity[7] = dg._pointsDensity[index+totalVertexLayer+numVertex.x];*/
 
     }
 }

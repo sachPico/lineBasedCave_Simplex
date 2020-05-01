@@ -1,22 +1,6 @@
 Base path: 'C:/Program Files/2019.3.0f3/Editor/Data', plugins path 'C:/Program Files/2019.3.0f3/Editor/Data/PlaybackEngines'
 Cmd: initializeCompiler
 Cmd: preprocessCompute
-  insize=7933 outsize=7932 ok=1
+  insize=8315 outsize=8314 ok=1
 Cmd: preprocessCompute
-  insize=7929 outsize=7928 ok=1
-Cmd: preprocessCompute
-  insize=7927 outsize=7926 ok=1
-Cmd: preprocessCompute
-  insize=7928 outsize=7927 ok=1
-Cmd: preprocessCompute
-  insize=7932 outsize=7931 ok=1
-Cmd: compileComputeKernel
-  api=4 insize=7931 outsize=3190 ok=1
-Cmd: preprocessCompute
-  insize=7928 outsize=7927 ok=1
-Cmd: preprocessCompute
-  insize=7930 outsize=7929 ok=1
-Cmd: preprocessCompute
-  insize=7913 outsize=7912 ok=1
-Cmd: preprocessCompute
-  insize=7914 outsize=7913 ok=1
+  insize=8561 outsize=8560 ok=1

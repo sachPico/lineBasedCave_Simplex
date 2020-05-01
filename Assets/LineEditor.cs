@@ -19,9 +19,9 @@ public class LineEditor : Editor
             l.AddLine(l.activeNodeIndex, mousePos);
             l.node[l.node.Count-1].ClampPosZeroMax(
             new Vector3(
-            l.voxelGrids.boundaryWorldPos.x*l.densityGenerator.numberOfGeneratedMeshObject.x,
-            l.voxelGrids.boundaryWorldPos.y*l.densityGenerator.numberOfGeneratedMeshObject.y,
-            l.voxelGrids.boundaryWorldPos.z*l.densityGenerator.numberOfGeneratedMeshObject.z));
+            l.voxelGrids.boundaryWorldPos.x*l.voxelGrids.numberOfGeneratedMeshObject.x,
+            l.voxelGrids.boundaryWorldPos.y*l.voxelGrids.numberOfGeneratedMeshObject.y,
+            l.voxelGrids.boundaryWorldPos.z*l.voxelGrids.numberOfGeneratedMeshObject.z));
         }
     }
 
@@ -108,9 +108,9 @@ public class LineEditor : Editor
                 Undo.RecordObject(l, "Moved node position");
                 l.node[i]._nodeProp.position = nodePos;
                 l.node[i].ClampPosZeroMax(new Vector3(
-            l.voxelGrids.boundaryWorldPos.x*l.densityGenerator.numberOfGeneratedMeshObject.x,
-            l.voxelGrids.boundaryWorldPos.y*l.densityGenerator.numberOfGeneratedMeshObject.y,
-            l.voxelGrids.boundaryWorldPos.z*l.densityGenerator.numberOfGeneratedMeshObject.z));
+            l.voxelGrids.boundaryWorldPos.x*l.densityGenerator._voxel.numberOfGeneratedMeshObject.x,
+            l.voxelGrids.boundaryWorldPos.y*l.densityGenerator._voxel.numberOfGeneratedMeshObject.y,
+            l.voxelGrids.boundaryWorldPos.z*l.densityGenerator._voxel.numberOfGeneratedMeshObject.z));
                 l.UpdateAllLines();
             }
         }

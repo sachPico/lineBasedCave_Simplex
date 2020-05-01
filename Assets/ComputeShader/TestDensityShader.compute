@@ -16,7 +16,7 @@ struct NodeProperties
 };
 
 bool isWorldSpaceNoise;
-int totalVertexLayer, totalVertex;
+int totalVertexLayer, totalVertex, index;
 float1 smoothingFactor;
 float1 noiseIntensity;
 float3 offset;
@@ -25,11 +25,6 @@ float1 noiseScale;
 StructuredBuffer<float3> noiseOffset;
 RWStructuredBuffer<NodeProperties> nodeProps;
 RWStructuredBuffer<LineProperties> lineProps;
-
-int GetIDFromCoord(int3 coord)
-{
-    return coord.x + (coord.z*numVertexX) + (coord.y*totalVertexLayer);
-}
 
 bool IsInRadius(NodeProperties n, float1 r, float3 sp)
 {
@@ -48,13 +43,20 @@ bool IsOutRadius(NodeProperties n, float1 r, float3 sp)
 float1 Falloff(float1 dist, float1 minR, float1 maxR)
 {
     float1 fV = (maxR-dist)/(maxR-minR);
-    if(fV<0) return -1;
-    else return clamp(fV,0,1);
+    if(fV<isoLevel) return 0;
+    else return clamp(fV,0.0001,isoLevel);
 }
 
 float1 EndToEndDensity(NodeProperties np, int spID)
 {
-    return clamp(Falloff(length(samplePoints[spID].xyz-np.position), 0, np.maxRadius),0,1);
+    if(length(samplePoints[spID]-np.position) < np.maxRadius)
+    {
+        return Falloff(length(samplePoints[spID]-np.position), 0, np.maxRadius);
+    }
+    else
+    {
+        return 0;
+    }
 }
 
 int GetClosestLineID(float4 sp)
@@ -92,7 +94,7 @@ int GetClosestLineID(float4 sp)
 
         //if(closestLineIndex==-1)
         //{
-            if(sp.w!=-1 && sampleToLine <= interpolatedRadius && orthogonalProjection>=-lp.AC && orthogonalProjection<=lp.lineLength-lp.BD)
+            if(sp.w!=-1 && sampleToLine <= interpolatedRadius && orthogonalProjection>=-nA.maxRadius && orthogonalProjection<=lp.lineLength+nB.maxRadius)
             {
                 closestDist = sampleToLine;
                 closestLineIndex=i;
@@ -132,11 +134,11 @@ float1 SetDensity(int index)
     int id = GetClosestLineID(samplePoints[index]);
     if(id==-1)
     {
-        return -1;
+        return 0;
     }
     /*if(id!=0)
     {
-        return -1;
+        return 0;
     }*/
     //return id;
     LineProperties closestLineProps = lineProps[id];
@@ -151,22 +153,27 @@ float1 SetDensity(int index)
         closestNodeB = nodeProps[closestLineProps.nodeA];
     }
 
+    /*if((closestNodeA.position.x>numVertexX-1 * voxelSize || closestNodeA.position.y>numVertexY-1 * voxelSize || closestNodeA.position.z>numVertexZ-1 * voxelSize) || (closestNodeB.position.x>numVertexX-1 * voxelSize || closestNodeB.position.y>numVertexY-1 * voxelSize || closestNodeB.position.z>numVertexZ-1 * voxelSize))
+    {
+        return 0;
+    }*/
+
     normalizedLine = normalize(closestNodeB.position-closestNodeA.position);
     orthogonalProjectionToClosestLine = dot(samplePoints[index].xyz-closestNodeA.position, normalizedLine);
 
     /*if(orthogonalProjectionToClosestLine<=-closestLineProps.AC)
     {
-        return EndToEndDensity(closestNodeA, index);
-        //return -1;
+        densityValue = EndToEndDensity(closestNodeA, index);
+        
     }
     else if(orthogonalProjectionToClosestLine>=closestLineProps.lineLength-closestLineProps.BD)
     {
-        return EndToEndDensity(closestNodeB, index);
-        //return -1;
-    }*/
-    //else//if(orthogonalProjectionToClosestLine>=-closestNodeA.maxRadius && orthogonalProjectionToClosestLine<=closestLineProps.lineLength+closestNodeA.maxRadius)
-    //{
-        //return -1;
+        densityValue = EndToEndDensity(closestNodeB, index);
+        
+    }
+    else//if(orthogonalProjectionToClosestLine>=-closestNodeA.maxRadius && orthogonalProjectionToClosestLine<=closestLineProps.lineLength+closestNodeA.maxRadius)
+    {*/
+        //return 0;
         float3 orthoProject = closestNodeA.position+(orthogonalProjectionToClosestLine * normalizedLine);
         float1 dist = sqrt(pow(length(samplePoints[index].xyz-closestNodeA.position),2) - pow(orthogonalProjectionToClosestLine,2));//length(orthoProject - samplePoints[index].xyz);
 
@@ -176,15 +183,16 @@ float1 SetDensity(int index)
         if(dist <= interpolatedMaxRadius)// && orthogonalProjectionToClosestLine>=-closestLineProps.AC && orthogonalProjectionToClosestLine<=closestLineProps.lineLength-closestLineProps.BD)
         {
             falloffValue = Falloff(dist, 0, interpolatedMaxRadius);//float1 falloffValue = ;
-            densityValue = 1;//falloffValue;//clamp(falloffValue * (1+smoothingFactor),0,1);
+            densityValue = 0;//isoLevel;//clamp(falloffValue + isoLevel,0,1);
         }
         else
         {
-            densityValue = -1;
+            return 0;
         }
+        
     //}
-
     float3 noiseInput;
+    float noiseValue=0;
     if(isWorldSpaceNoise)
     {
         noiseInput = samplePoints[index].xyz / noiseScale;
@@ -195,43 +203,40 @@ float1 SetDensity(int index)
         noiseInput.x = dot(samplePoints[index].xyz-closestNodeA.position, closestLineProps.xLocal) / noiseScale;
         noiseInput.y = dot(samplePoints[index].xyz-closestNodeA.position, closestLineProps.yLocal) / noiseScale;
     }
-    float noiseValue;
     for(int i=0; i<noiseOffset.Length; i++)
     {
         noiseValue += noise3D(noiseInput.x + noiseOffset[i].x, noiseInput.y + noiseOffset[i].y, noiseInput.z + noiseOffset[i].z);
     }
-    noiseValue /= noiseOffset.Length;
-    return noiseValue*noiseIntensity;
-    //return densityValue;
+    noiseValue /= noiseOffset.Length*noiseIntensity;
+    if(densityValue+noiseValue > 1)
+    {
+        densityValue = isoLevel + (noiseValue*isoLevel);
+    }
+    else
+    {
+        densityValue += noiseValue + isoLevel;
+    }
+    return densityValue;
 }
 
 void SetPosition(int3 coord)
 {
-    int index = GetIDFromCoord(coord);
-    samplePoints[index].x = offset.x + (coord.x * voxelSize);
-    samplePoints[index].y = offset.y + (coord.y * voxelSize);
-    samplePoints[index].z = offset.z + (coord.z * voxelSize);
+    samplePoints[index].x = coord.x * voxelSize + offset.x;
+    samplePoints[index].y = coord.y * voxelSize + offset.y;
+    samplePoints[index].z = coord.z * voxelSize + offset.z;
 }
 
-[numthreads(8,8,8)]
-void CSMain (int3 threadID : SV_DISPATCHTHREADID)
+[numthreads(1,1,1)]
+void CSMain (uint3 threadID : SV_DISPATCHTHREADID)
 {
-    if(threadID.x>numVertexX || threadID.y>numVertexY || threadID.z>numVertexZ)
+    if(threadID.x>numVertexX || threadID.y>numVertexY || threadID.z>numVertexZ)// || threadID.x==0 || threadID.y==0 || threadID.z==0)
     {
-        return;
+        return;//samplePoints[index].w = 0;
     }
     totalVertexLayer = numVertexX*numVertexZ;  //Total Vertex dalam satu lapis
     //totalVertex= totalVertexLayer*numVertexY;
 
-    int index = threadID.x + (threadID.z * numVertexX) + (threadID.y * totalVertexLayer);
-
+    index = GetIDFromCoord(threadID);
     SetPosition(threadID);
-    if(samplePoints[index].y<=0)
-    {
-        samplePoints[index].w = -1;
-    }
-    else
-    {
-        samplePoints[index].w = SetDensity(index);
-    }
+    samplePoints[index].w = SetDensity(index);
 }

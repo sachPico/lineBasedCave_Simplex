@@ -41,9 +41,9 @@ public class LineGenerator : MonoBehaviour
     public bool CheckNode(int i)
     {
         node[i].ClampPosZeroMax(new Vector3(
-            voxelGrids.boundaryWorldPos.x*densityGenerator.numberOfGeneratedMeshObject.x,
-            voxelGrids.boundaryWorldPos.y*densityGenerator.numberOfGeneratedMeshObject.y,
-            voxelGrids.boundaryWorldPos.z*densityGenerator.numberOfGeneratedMeshObject.z));
+            voxelGrids.boundaryWorldPos.x*voxelGrids.numberOfGeneratedMeshObject.x,
+            voxelGrids.boundaryWorldPos.y*voxelGrids.numberOfGeneratedMeshObject.y,
+            voxelGrids.boundaryWorldPos.z*voxelGrids.numberOfGeneratedMeshObject.z));
         if(node[i]._nodeProp.position.x<voxelGrids.boundaryWorldPos.x&&node[i]._nodeProp.position.x>0)
         {
             if(node[i]._nodeProp.position.y<voxelGrids.boundaryWorldPos.y&&node[i]._nodeProp.position.y>0)

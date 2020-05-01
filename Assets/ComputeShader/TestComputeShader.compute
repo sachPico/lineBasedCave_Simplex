@@ -24,7 +24,7 @@ float4 vertices[8];
 
 void GetVertices(uint3 id)
 {
-    uint firstVertIndex = id.x + (id.z * numVertexX) + (id.y * numVertexX * numVertexZ);
+    uint firstVertIndex = GetIDFromCoord(id);
 
     vertices[0] = samplePoints[firstVertIndex];
     vertices[1] = samplePoints[firstVertIndex+1];
@@ -53,10 +53,10 @@ float3 interpolateVerts(float4 v1, float4 v2) {
     return v1.xyz + (t*(v2.xyz-v1.xyz));
 }
 
-[numthreads(8,8,8)]
-void GenerateMesh (int3 id : SV_DISPATCHTHREADID)    //id = index kubus
+[numthreads(1,1,1)]
+void GenerateMesh (uint3 id : SV_DISPATCHTHREADID)    //id = index kubus
 {
-    if(id.x>numVertexX || id.y>numVertexY || id.z>numVertexZ)
+    if(id.x>numVertexX-1 || id.y>numVertexY-1 || id.z>numVertexZ-1)
     {
         return;
     }
