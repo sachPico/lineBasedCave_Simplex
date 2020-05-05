@@ -5,7 +5,7 @@ using UnityEngine;
 public class GeneratedMeshProperties : MonoBehaviour
 {
     public Mesh _generatedMesh;
-    //MeshCollider _collider;
+    MeshCollider _collider;
     MeshFilter _meshFilter;
     MeshRenderer _meshRenderer;
 
@@ -13,12 +13,12 @@ public class GeneratedMeshProperties : MonoBehaviour
     {
         _meshFilter = GetComponent<MeshFilter>();
         _meshRenderer = GetComponent<MeshRenderer>();
-        //_collider = GetComponent<MeshCollider>();
+        _collider = GetComponent<MeshCollider>();
 
-        /*if(_collider==null)
+        if(_collider==null)
         {
             _collider = gameObject.AddComponent<MeshCollider>();
-        }*/
+        }
         if(_meshFilter==null)
         {
             _meshFilter = gameObject.AddComponent<MeshFilter>();
@@ -31,11 +31,16 @@ public class GeneratedMeshProperties : MonoBehaviour
         //_generatedMesh.indexFormat = UnityEngine.Rendering.IndexFormat.UInt32;
         _generatedMesh = _meshFilter.sharedMesh;
         _meshRenderer.material = mat;
-        //_collider.sharedMesh = _generatedMesh;
+        _collider.sharedMesh = _generatedMesh;
     }
 
     public void RefreshMeshFilter(Mesh newMesh)
     {
-        if(newMesh!=null)   _meshFilter.sharedMesh = newMesh;
+        _collider.enabled = false;
+        if(newMesh!=null)
+        {
+            _meshFilter.sharedMesh = newMesh;
+        }
+        _collider.enabled = true;
     }
 }

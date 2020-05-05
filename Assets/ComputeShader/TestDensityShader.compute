@@ -202,35 +202,36 @@ float1 SetDensity(int index)
         a = samplePoints[index].xyz - orthoProject;
         b = closestLineProps.xLocal;// + orthoProject;
         yLocal = dot(a,closestLineProps.yLocal);
-        angle = degrees((acos(dot(a, b)/(length(a)*length(b)))));
+        angle = (acos(dot(a, b)/(length(a)*length(b))));
         if(yLocal<0)
         {
-            angle = 360 - angle;
+            angle = radians(360) - angle;
         }
         //angle %= 360;
 
-        noiseInput.x = angle / 360 * noiseScale;//(acos()%360)/360;
+        noiseInput.x = angle / radians(360) * noiseScale;
         noiseInput.y = orthogonalProjectionToClosestLine/closestLineProps.lineLength * noiseScale;
-        noiseInput.z = 0;
+        noiseInput.z = 0;//orthogonalProjectionToClosestLine;
         //noiseInput += noiseOffset;
 
-        noiseValue = simplexNoise(2, noiseInput);
+        noiseValue = simplexNoise(2, noiseInput + noiseOffset);
+        float noiseDistance = interpolatedMaxRadius - (abs(noiseValue)*interpolatedMaxRadius);
         //octaveOffset.Length;
-        if(dist <= interpolatedMaxRadius - (noiseValue*interpolatedMaxRadius/2))
+        if(dist <= noiseDistance)
         {
-            
-            densityValue = isoLevel;
+            densityValue = Falloff(dist, 0, noiseDistance)/2;
+            //densityValue = isoLevel;
         }
         else
         {
-            //noiseInput.z += dist;//orthogonalProjectionToClosestLine;
+            /*noiseInput.z = orthogonalProjectionToClosestLine * noiseScale;
             //noiseInput.x = dot(samplePoints[index].xyz-closestNodeA.position, closestLineProps.xLocal) * noiseScale;
             //noiseInput.y = dot(samplePoints[index].xyz-closestNodeA.position, closestLineProps.yLocal) * noiseScale;
-            /*noiseInput.z = orthogonalProjectionToClosestLine;
+            //noiseInput.z = orthogonalProjectionToClosestLine;
             noiseInput.x = dot(samplePoints[index].xyz-closestNodeA.position, closestLineProps.xLocal) * noiseScale;
             noiseInput.y = dot(samplePoints[index].xyz-closestNodeA.position, closestLineProps.yLocal) * noiseScale;
-            densityValue = simplexNoise(3, noiseInput) * 2;*/
-            densityValue = 0;//simplexNoise(3, noiseInput);
+            densityValue = simplexNoise(3, noiseInput)* isoLevel;*/
+            //densityValue = simplexNoise(3, noiseInput);
         }
     }
     /*densityValue += (1-isoLevel) * noiseValue;
