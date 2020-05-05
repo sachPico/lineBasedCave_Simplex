@@ -19,6 +19,7 @@ bool isWorldSpaceNoise;
 int totalVertexLayer, totalVertex, index;
 float1 smoothingFactor;
 float1 noiseWeight;
+float1 weight;
 float1 octaveMaxValue;
 float3 offset;
 float3 noiseOffset;
@@ -48,6 +49,37 @@ float1 Falloff(float1 dist, float1 minR, float1 maxR)
     float1 fV = (maxR-dist)/(maxR-minR);
     if(fV<isoLevel) return 0;
     else return clamp(fV,0,1);
+}
+
+float1 simplexNoise(int dimension, float3 inputCoordinate)
+{
+    float1 v=0;
+    frequency = 1;
+    amplitude = 1;
+    octaveMaxValue = 0;
+    weight = 1;
+    if(dimension == 2)
+    {
+        for(int i=0; i<octaveOffset.Length; i++)
+        {
+            v += noise2D(inputCoordinate.x+octaveOffset[i].x, inputCoordinate.y+octaveOffset[i].y) * amplitude;
+            octaveMaxValue += amplitude;
+            frequency *= lacunarity;
+            amplitude *= persistence;
+        }
+    }
+    if(dimension == 3)
+    {
+        for(int i=0; i<octaveOffset.Length; i++)
+        {
+            v += noise3D(inputCoordinate.x+octaveOffset[i].x, inputCoordinate.y+octaveOffset[i].y, inputCoordinate.z+octaveOffset[i].z) * amplitude;
+            octaveMaxValue += amplitude;
+            frequency *= lacunarity;
+            amplitude *= persistence;
+        }
+    }
+    v /= octaveMaxValue;
+    return v;
 }
 
 float1 EndToEndDensity(NodeProperties np, int spID)
@@ -109,8 +141,9 @@ float1 SetDensity(int index)
 {
     NodeProperties closestNodeA, closestNodeB;
     LineProperties closestLineProps;
-    float1 lineLength, orthogonalProjectionToClosestLine, falloffValue, densityValue, noiseValue=0, interpolatedMaxRadius, interpolatedMinRadius, dist, weight;
+    float1 lineLength, orthogonalProjectionToClosestLine, falloffValue, densityValue=0, noiseValue=0, interpolatedMaxRadius, interpolatedMinRadius, dist;
     float3 orthoProject, normalizedLine, noiseInput;
+    float3 a, b;
     
     int id = GetClosestLineID(samplePoints[index]);
     if(id==-1)
@@ -133,11 +166,11 @@ float1 SetDensity(int index)
     orthogonalProjectionToClosestLine = dot(samplePoints[index].xyz-closestNodeA.position, normalizedLine);
 
     orthoProject = closestNodeA.position+(orthogonalProjectionToClosestLine * normalizedLine);
-    dist = sqrt(pow(length(samplePoints[index].xyz-closestNodeA.position),2) - pow(orthogonalProjectionToClosestLine,2));//length(orthoProject - samplePoints[index].xyz);
+    dist = length(samplePoints[index].xyz - orthoProject);//sqrt(pow(length(samplePoints[index].xyz-closestNodeA.position),2) - pow(orthogonalProjectionToClosestLine,2));//length(orthoProject - samplePoints[index].xyz);
 
     interpolatedMaxRadius = closestLineProps.CE + ((orthogonalProjectionToClosestLine+closestLineProps.AC)/(closestLineProps.lineLength+closestLineProps.AC-closestLineProps.BD) * (closestLineProps.DF - closestLineProps.CE));
         
-    if(dist <= interpolatedMaxRadius)
+    /*if(dist <= interpolatedMaxRadius)
     {
         //falloffValue = Falloff(dist, 0, interpolatedMaxRadius);
         //densityValue = isoLevel;//isoLevel;
@@ -156,33 +189,59 @@ float1 SetDensity(int index)
         noiseInput.z = orthogonalProjectionToClosestLine / noiseScale;
         noiseInput.x = dot(samplePoints[index].xyz-closestNodeA.position, closestLineProps.xLocal) / noiseScale;
         noiseInput.y = dot(samplePoints[index].xyz-closestNodeA.position, closestLineProps.yLocal) / noiseScale;
-    }
-    frequency = 1;
-    amplitude = 1;
-    weight = 1;
-    for(int i=0; i<octaveOffset.Length; i++)
+    }*/
+    
+
+    if(dist==0)
     {
-        noiseInput = noiseInput/frequency;//+octaveOffset[i]+noiseOffset;//*frequency;
-        noiseValue += noise3D(noiseInput.x, noiseInput.y, noiseInput.z) * amplitude;
-        octaveMaxValue += amplitude;
-        //float v = 1-abs(noise3D(noiseInput.x, noiseInput.y, noiseInput.z));
-        //v *= v*weight;
-        //noiseValue += v*amplitude;
-        //weight = max(min(v*noiseWeight,1),0);
-        frequency *= lacunarity;
-        amplitude *= persistence;
+        return isoLevel;
     }
-    noiseValue /= octaveMaxValue;//octaveOffset.Length;
-    densityValue += (1-isoLevel) * noiseValue;
+    else
+    {
+        float angle, yLocal;
+        a = samplePoints[index].xyz - orthoProject;
+        b = closestLineProps.xLocal;// + orthoProject;
+        yLocal = dot(a,closestLineProps.yLocal);
+        angle = degrees((acos(dot(a, b)/(length(a)*length(b)))));
+        if(yLocal<0)
+        {
+            angle = 360 - angle;
+        }
+        //angle %= 360;
+
+        noiseInput.x = angle / 360 * noiseScale;//(acos()%360)/360;
+        noiseInput.y = orthogonalProjectionToClosestLine/closestLineProps.lineLength * noiseScale;
+        noiseInput.z = 0;
+        //noiseInput += noiseOffset;
+
+        noiseValue = simplexNoise(2, noiseInput);
+        //octaveOffset.Length;
+        if(dist <= interpolatedMaxRadius - (noiseValue*interpolatedMaxRadius/2))
+        {
+            
+            densityValue = isoLevel;
+        }
+        else
+        {
+            //noiseInput.z += dist;//orthogonalProjectionToClosestLine;
+            //noiseInput.x = dot(samplePoints[index].xyz-closestNodeA.position, closestLineProps.xLocal) * noiseScale;
+            //noiseInput.y = dot(samplePoints[index].xyz-closestNodeA.position, closestLineProps.yLocal) * noiseScale;
+            /*noiseInput.z = orthogonalProjectionToClosestLine;
+            noiseInput.x = dot(samplePoints[index].xyz-closestNodeA.position, closestLineProps.xLocal) * noiseScale;
+            noiseInput.y = dot(samplePoints[index].xyz-closestNodeA.position, closestLineProps.yLocal) * noiseScale;
+            densityValue = simplexNoise(3, noiseInput) * 2;*/
+            densityValue = 0;//simplexNoise(3, noiseInput);
+        }
+    }
+    /*densityValue += (1-isoLevel) * noiseValue;
     if(densityValue+noiseValue > 1)
     {
         densityValue = isoLevel;
-        //densityValue %= isoLevel;//isoLevel + ((densityValue+noiseValue-1)/(1-isoLevel));
     }
     else
     {
         densityValue += noiseValue;
-    }
+    }*/
     return densityValue;
 }
 

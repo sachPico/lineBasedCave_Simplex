@@ -48,6 +48,7 @@
      <Compile Include="Assets\ComputeShader\EditorScript\ConditionalHideAttribute.cs" />
      <Compile Include="Assets\Scripts\CaveGenerator\DensityGenerator\DensityGenerator.cs" />
      <Compile Include="Assets\Scripts\CaveGenerator\DensityGenerator\GeneratedMeshProperties.cs" />
+     <Compile Include="Assets\Scripts\CaveGenerator\DensityGenerator\MeshOptimizer.cs" />
      <Compile Include="Assets\Scripts\CaveGenerator\DensityGenerator\Voxel.cs" />
      <Compile Include="Assets\Scripts\CaveGenerator\LineDataHandler\Line.cs" />
      <Compile Include="Assets\Scripts\CaveGenerator\LineDataHandler\LineGenerator.cs" />

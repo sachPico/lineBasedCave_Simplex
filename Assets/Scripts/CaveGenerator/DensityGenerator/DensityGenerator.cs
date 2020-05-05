@@ -73,6 +73,7 @@ public class DensityGenerator : MonoBehaviour
     [HideInInspector]
     
     const int numThreads = 8;
+    int lastIndex = 0;
     ComputeBuffer _computeBuffer, _resultBuffer, _meshBuffer, _triCountBuffer, _octaveOffsetBuffer;
     Mesh _generatedMesh;
     
@@ -146,9 +147,13 @@ public class DensityGenerator : MonoBehaviour
 
         var rng = new System.Random(noiseSeed);
         
-        InitGeneratedMesh();
+        //InitGeneratedMesh();
         Vector3 chunkOffset = Vector3.zero;
         int index;
+
+        GameObject newGameObject = new GameObject();
+        newGameObject.AddComponent<GeneratedMeshProperties>().Initiate(material);
+        newGameObject.transform.SetParent(generatedMeshObjectsHolder.transform);
 
         //CreateBuffers();
         
@@ -220,7 +225,7 @@ public class DensityGenerator : MonoBehaviour
                     //_densityShader.Dispatch(0,_voxel.numVoxel.x+1,_voxel.numVoxel.y+1,_voxel.numVoxel.z+1);
                     
                     _pointsBuffer.GetData(_pointsDensity);
-                    generatedMeshObjectsHolder.transform.GetChild(index).GetComponent<GeneratedMeshProperties>().Initiate(material);
+                    //generatedMeshObjectsHolder.transform.GetChild(index).GetComponent<GeneratedMeshProperties>().Initiate(material);
                     GenerateMesh(index);
                 }
             }
@@ -250,7 +255,7 @@ public class DensityGenerator : MonoBehaviour
         Triangle[] tris = new Triangle[numTris];
         _meshBuffer.GetData (tris, 0, 0, numTris);
 
-        Mesh genMesh = generatedMeshObjectsHolder.transform.GetChild(index).GetComponent<GeneratedMeshProperties>()._generatedMesh;
+        Mesh genMesh = generatedMeshObjectsHolder.transform.GetChild(lastIndex).GetComponent<GeneratedMeshProperties>()._generatedMesh;
         if(genMesh!=null)
         {
             genMesh.Clear();
@@ -273,9 +278,36 @@ public class DensityGenerator : MonoBehaviour
         genMesh.SetTriangles(meshTriangles,0);
         //genMesh.vertices = vert;
         //genMesh.triangles = meshTriangles;
-
         genMesh.RecalculateNormals();
-        generatedMeshObjectsHolder.transform.GetChild(index).GetComponent<GeneratedMeshProperties>().RefreshMeshFilter(genMesh);
+
+        if(index==0)
+        {
+            generatedMeshObjectsHolder.transform.GetChild(index).GetComponent<GeneratedMeshProperties>().Initiate(material);
+            generatedMeshObjectsHolder.transform.GetChild(index).GetComponent<GeneratedMeshProperties>().RefreshMeshFilter(genMesh);
+        }
+        else
+        {
+            Mesh oldMesh = generatedMeshObjectsHolder.transform.GetChild(lastIndex).GetComponent<GeneratedMeshProperties>()._generatedMesh;
+            generatedMeshObjectsHolder.transform.GetChild(lastIndex).GetComponent<GeneratedMeshProperties>().Initiate(material);
+            Mesh combinedMesh = MeshOptimizer.CombineMesh(oldMesh, genMesh);
+            if(combinedMesh==null)
+            {
+                lastIndex++;
+                GameObject newGameObject = new GameObject();
+                newGameObject.transform.SetParent(generatedMeshObjectsHolder.transform);
+                generatedMeshObjectsHolder.transform.GetChild(lastIndex).GetComponent<GeneratedMeshProperties>().Initiate(material);
+                generatedMeshObjectsHolder.transform.GetChild(lastIndex).GetComponent<GeneratedMeshProperties>().RefreshMeshFilter(genMesh);
+            }
+            else
+            {
+                generatedMeshObjectsHolder.transform.GetChild(lastIndex).GetComponent<GeneratedMeshProperties>().RefreshMeshFilter(combinedMesh);
+            }
+        }
+        /*if(index!=0)
+        {
+
+        }*/
+        //generatedMeshObjectsHolder.transform.GetChild(index).GetComponent<GeneratedMeshProperties>().RefreshMeshFilter(genMesh);
         //ReleaseBuffers();
         timeDuration = (float)System.DateTime.Now.Second + ((float)System.DateTime.Now.Millisecond/1000) - timeStart;
         totalTimeElapsed += timeDuration;
