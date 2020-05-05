@@ -1,6 +1,7 @@
 .vscode/
 Logs/
 Library/
+Assets/Scenes/
 obj/
 Packages/
 ProjectSettings/
