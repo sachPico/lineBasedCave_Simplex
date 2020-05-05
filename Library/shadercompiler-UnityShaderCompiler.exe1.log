@@ -5,4 +5,4 @@ Cmd: compileComputeKernel
   error: 1 plat 4 at TestDensityShader.compute(73): signed/unsigned mismatch, unsigned assumed
   error: 1 plat 4 at TestDensityShader.compute(87): implicit truncation of vector type
   error: 1 plat 4 at TestDensityShader.compute(89): implicit truncation of vector type
-  api=4 insize=8817 outsize=26060 ok=1
+  api=4 insize=8256 outsize=30475 ok=1

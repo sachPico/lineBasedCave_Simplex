@@ -22,10 +22,10 @@ public class DensityGeneratorEditor : Editor
             CSTarget.GenerateDensity();
         }
         
-        /*if(GUILayout.Button("Generate Mesh"))
+        if(GUILayout.Button("Combine Meshes"))
         {
-            CSTarget.GenerateMesh(0);
-        }*/
+            MeshOptimizer.CombineMesh(CSTarget.generatedMeshObjectsHolder);
+        }
 
         if(GUILayout.Button("Clear buffers"))
         {

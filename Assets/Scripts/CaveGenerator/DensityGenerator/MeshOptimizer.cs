@@ -3,22 +3,34 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
 
+[RequireComponent(typeof(MeshFilter))]
+[RequireComponent(typeof(MeshRenderer))]
 public class MeshOptimizer
 {
-    public static Mesh CombineMesh(Mesh mA, Mesh mB)
+    public static void CombineMesh(GameObject holderParent)
     {
-        Mesh combinedMesh = new Mesh();
-        if(mA.vertices.Length + mB.vertices.Length < Mathf.Pow(2,16))
+        MeshFilter[] meshFilters = holderParent.transform.GetComponentsInChildren<MeshFilter>();
+        CombineInstance[] combine = new CombineInstance[meshFilters.Length];
+
+        int i = 0;
+        while (i < meshFilters.Length)
         {
-            CombineInstance[] _combine = new CombineInstance[2];
-            _combine[0].mesh = mA;
-            _combine[1].mesh = mB;
-            combinedMesh.CombineMeshes(_combine);
-            return combinedMesh;
+            meshFilters[i].gameObject.SetActive(false);
+            combine[i].mesh = meshFilters[i].sharedMesh;
+            combine[i].transform = meshFilters[i].transform.localToWorldMatrix;
+            meshFilters[i].gameObject.SetActive(true);
+
+            i++;
         }
-        else
+        holderParent.transform.GetComponent<MeshFilter>().sharedMesh = new Mesh();
+        holderParent.transform.GetComponent<MeshFilter>().sharedMesh.indexFormat = UnityEngine.Rendering.IndexFormat.UInt32;
+        holderParent.transform.GetComponent<MeshFilter>().sharedMesh.CombineMeshes(combine);
+        //holderParent.transform.gameObject.SetActive(true);
+        int iteration = holderParent.transform.childCount;
+        for(i=0 ; i<iteration; i++)
         {
-            return null;
+            MonoBehaviour.DestroyImmediate(holderParent.transform.GetChild(0).gameObject);
         }
+        holderParent.GetComponent<MeshCollider>().sharedMesh = holderParent.GetComponent<MeshFilter>().sharedMesh;
     }
 }

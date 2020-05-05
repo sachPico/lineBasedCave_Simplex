@@ -127,7 +127,7 @@ int GetClosestLineID(float4 sp)
         sampleToLine = sqrt(pow(length(nodeAToSample),2)-pow(orthogonalProjection,2));
         interpolatedRadius = (orthogonalProjection+lp.AC)/(lp.lineLength+lp.AC-lp.BD)*(lp.DF-lp.CE)+lp.CE;
 
-        if(sp.w!=-1 && sampleToLine <= interpolatedRadius && orthogonalProjection>=-lp.AC && orthogonalProjection<=lp.lineLength-lp.BD)
+        if(closestLineIndex==-1 && sampleToLine <= interpolatedRadius && orthogonalProjection>=-lp.AC && orthogonalProjection<=lp.lineLength-lp.BD)
         {
             closestDist = sampleToLine;
             closestLineIndex=i;
@@ -179,60 +179,56 @@ float1 SetDensity(int index)
     else
     {
         return 0;
-    }
+    }*/
     if(isWorldSpaceNoise)
     {
-        noiseInput = samplePoints[index].xyz;
+        noiseInput = samplePoints[index].xyz * noiseScale;
+        densityValue = simplexNoise(3, noiseInput + noiseOffset)/isoLevel;
     }
     else
     {
-        noiseInput.z = orthogonalProjectionToClosestLine / noiseScale;
+        /*noiseInput.z = orthogonalProjectionToClosestLine / noiseScale;
         noiseInput.x = dot(samplePoints[index].xyz-closestNodeA.position, closestLineProps.xLocal) / noiseScale;
-        noiseInput.y = dot(samplePoints[index].xyz-closestNodeA.position, closestLineProps.yLocal) / noiseScale;
-    }*/
-    
+        noiseInput.y = dot(samplePoints[index].xyz-closestNodeA.position, closestLineProps.yLocal) / noiseScale;*/
 
-    if(dist==0)
-    {
-        return isoLevel;
-    }
-    else
-    {
-        float angle, yLocal;
-        a = samplePoints[index].xyz - orthoProject;
-        b = closestLineProps.xLocal;// + orthoProject;
-        yLocal = dot(a,closestLineProps.yLocal);
-        angle = degrees((acos(dot(a, b)/(length(a)*length(b)))));
-        if(yLocal<0)
+        if(dist==0)
         {
-            angle = 360 - angle;
-        }
-        //angle %= 360;
-
-        noiseInput.x = angle / 360 * noiseScale;//(acos()%360)/360;
-        noiseInput.y = orthogonalProjectionToClosestLine/closestLineProps.lineLength * noiseScale;
-        noiseInput.z = 0;
-        //noiseInput += noiseOffset;
-
-        noiseValue = simplexNoise(2, noiseInput);
-        //octaveOffset.Length;
-        if(dist <= interpolatedMaxRadius - (noiseValue*interpolatedMaxRadius/2))
-        {
-            
-            densityValue = isoLevel;
+            return isoLevel;
         }
         else
         {
-            //noiseInput.z += dist;//orthogonalProjectionToClosestLine;
-            //noiseInput.x = dot(samplePoints[index].xyz-closestNodeA.position, closestLineProps.xLocal) * noiseScale;
-            //noiseInput.y = dot(samplePoints[index].xyz-closestNodeA.position, closestLineProps.yLocal) * noiseScale;
-            /*noiseInput.z = orthogonalProjectionToClosestLine;
-            noiseInput.x = dot(samplePoints[index].xyz-closestNodeA.position, closestLineProps.xLocal) * noiseScale;
-            noiseInput.y = dot(samplePoints[index].xyz-closestNodeA.position, closestLineProps.yLocal) * noiseScale;
-            densityValue = simplexNoise(3, noiseInput) * 2;*/
-            densityValue = 0;//simplexNoise(3, noiseInput);
+            float angle, yLocal;
+            a = samplePoints[index].xyz - orthoProject;
+            b = closestLineProps.xLocal;// + orthoProject;
+            yLocal = dot(a,closestLineProps.yLocal);
+            angle = degrees((acos(dot(a, b)/(length(a)*length(b)))));
+            if(yLocal<0)
+            {
+                angle = 360 - angle;
+            }
+            //angle %= 360;
+
+            noiseInput.x = angle / 360 * noiseScale;//(acos()%360)/360;
+            noiseInput.y = (orthogonalProjectionToClosestLine / closestLineProps.lineLength * noiseScale);// + (sin(radians(angle/2))*0.25);
+            noiseInput.z = 0;
+            //noiseInput += noiseOffset;
+
+            noiseValue = simplexNoise(2, noiseInput + noiseOffset);
+            //octaveOffset.Length;
+            float noiseDistance = interpolatedMaxRadius - (abs(noiseValue)*interpolatedMaxRadius);
+            if(dist <= noiseDistance)
+            {
+                densityValue = Falloff(dist, 0, noiseDistance);
+            }
+            //else
+            //{
+                //densityValue = 0;
+            //}  
         }
     }
+    
+
+    
     /*densityValue += (1-isoLevel) * noiseValue;
     if(densityValue+noiseValue > 1)
     {

@@ -4,10 +4,11 @@ using UnityEngine;
 
 public class Basic3DMovementController : MonoBehaviour
 {
-    public float moveSpeed;
+    public float moveSpeed, turnSpeed;
     public float rotateSensitivity;
 
-    float xAxisClamp;
+    float xAxisClamp, mouseX=0, mouseY=0, turnTime, rotateYLocal=0;
+    Vector3 targetRotation;
     GameObject camObject;
     // Start is called before the first frame update
 
@@ -23,33 +24,31 @@ public class Basic3DMovementController : MonoBehaviour
         Cursor.lockState = CursorLockMode.Locked;
     }
 
+    void CameraHandler()
+    {
+        mouseX += Input.GetAxis("Mouse X") * Time.fixedDeltaTime * rotateSensitivity % 360;
+        mouseY -= Input.GetAxis("Mouse Y") * Time.fixedDeltaTime * rotateSensitivity;
+        mouseY = Mathf.Clamp(mouseY, -40, 85);
+        targetRotation = new Vector3(mouseY, mouseX);
+
+        //transform.position += (moveForward + moveSide) * moveSpeed * Time.fixedDeltaTime;
+        camObject.transform.eulerAngles = targetRotation;
+    }
+
+    void PlayerMovementHandler()
+    {
+        float moveIn = Input.GetAxisRaw("Vertical");
+        rotateYLocal += Input.GetAxisRaw("Horizontal") * turnSpeed * Time.fixedDeltaTime;
+        rotateYLocal %= 360;
+
+        transform.position += (moveSpeed * moveIn * transform.forward * Time.fixedDeltaTime);
+        transform.eulerAngles = new Vector3(0, rotateYLocal, 0);
+    }
+
     // Update is called once per frame
     void FixedUpdate()
     {
-        Vector3 moveForward, moveSide;
-        moveForward = transform.forward * Input.GetAxisRaw("Vertical");
-        moveSide = transform.right * Input.GetAxisRaw("Horizontal");
-
-        float mouseX = Input.GetAxis("Mouse X") * Time.fixedDeltaTime * rotateSensitivity;
-        float mouseY = Input.GetAxis("Mouse Y") * Time.fixedDeltaTime * rotateSensitivity;
-
-        xAxisClamp+=mouseY;
-
-        if(xAxisClamp>90f)
-        {
-            xAxisClamp = 90f;
-            mouseY = 0;
-            ClampXAxisRotation(270f);
-        }
-        else if(xAxisClamp<-90f)
-        {
-            xAxisClamp = -90f;
-            mouseY = 0;
-            ClampXAxisRotation(90f);
-        }
-
-        transform.position += (moveForward + moveSide) * moveSpeed * Time.fixedDeltaTime;
-        camObject.transform.Rotate(-transform.right * mouseY);
-        camObject.transform.Rotate(Vector3.up * mouseX);
+        CameraHandler();
+        PlayerMovementHandler();
     }
 }

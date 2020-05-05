@@ -36,6 +36,12 @@ public class GeneratedMeshProperties : MonoBehaviour
 
     public void RefreshMeshFilter(Mesh newMesh)
     {
-        if(newMesh!=null)   _meshFilter.sharedMesh = newMesh;
+        gameObject.SetActive(false);
+        if(newMesh!=null)
+        {
+            _generatedMesh = newMesh;
+            _meshFilter.sharedMesh = newMesh;
+        }
+        gameObject.SetActive(true);
     }
 }
