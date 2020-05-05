@@ -1,42 +1,8 @@
 Base path: 'C:/Program Files/2019.3.0f3/Editor/Data', plugins path 'C:/Program Files/2019.3.0f3/Editor/Data/PlaybackEngines'
 Cmd: initializeCompiler
 Cmd: compileComputeKernel
-  error: 2 plat 4 at TestDensityShader.compute(58): undeclared identifier 'weight'
-  api=4 insize=7349 outsize=0 ok=0
-Cmd: compileComputeKernel
-  error: 1 plat 4 at TestDensityShader.compute(62): signed/unsigned mismatch, unsigned assumed
-  error: 2 plat 4 at TestDensityShader.compute(64): undeclared identifier 'xi'
-  api=4 insize=7357 outsize=0 ok=0
-Cmd: compileComputeKernel
-  error: 1 plat 4 at TestDensityShader.compute(62): signed/unsigned mismatch, unsigned assumed
-  error: 1 plat 4 at TestDensityShader.compute(80): implicit truncation of vector type
-  error: 1 plat 4 at TestDensityShader.compute(82): implicit truncation of vector type
-  api=4 insize=7425 outsize=26172 ok=1
-Cmd: compileComputeKernel
-  error: 1 plat 4 at TestDensityShader.compute(62): signed/unsigned mismatch, unsigned assumed
-  error: 1 plat 4 at TestDensityShader.compute(80): implicit truncation of vector type
-  error: 1 plat 4 at TestDensityShader.compute(82): implicit truncation of vector type
-  api=4 insize=7577 outsize=26300 ok=1
-Cmd: compileComputeKernel
-  error: 1 plat 4 at TestDensityShader.compute(62): signed/unsigned mismatch, unsigned assumed
-  error: 1 plat 4 at TestDensityShader.compute(80): implicit truncation of vector type
-  error: 1 plat 4 at TestDensityShader.compute(82): implicit truncation of vector type
-  api=4 insize=7576 outsize=26300 ok=1
-Cmd: compileComputeKernel
   error: 1 plat 4 at TestDensityShader.compute(63): signed/unsigned mismatch, unsigned assumed
   error: 1 plat 4 at TestDensityShader.compute(73): signed/unsigned mismatch, unsigned assumed
   error: 1 plat 4 at TestDensityShader.compute(87): implicit truncation of vector type
   error: 1 plat 4 at TestDensityShader.compute(89): implicit truncation of vector type
-  api=4 insize=8235 outsize=31222 ok=1
-Cmd: compileComputeKernel
-  error: 1 plat 4 at TestDensityShader.compute(63): signed/unsigned mismatch, unsigned assumed
-  error: 1 plat 4 at TestDensityShader.compute(73): signed/unsigned mismatch, unsigned assumed
-  error: 1 plat 4 at TestDensityShader.compute(87): implicit truncation of vector type
-  error: 1 plat 4 at TestDensityShader.compute(89): implicit truncation of vector type
-  api=4 insize=8257 outsize=3038 ok=1
-Cmd: compileComputeKernel
-  error: 1 plat 4 at TestDensityShader.compute(63): signed/unsigned mismatch, unsigned assumed
-  error: 1 plat 4 at TestDensityShader.compute(73): signed/unsigned mismatch, unsigned assumed
-  error: 1 plat 4 at TestDensityShader.compute(87): implicit truncation of vector type
-  error: 1 plat 4 at TestDensityShader.compute(89): implicit truncation of vector type
-  api=4 insize=8597 outsize=26111 ok=1
+  api=4 insize=8817 outsize=26060 ok=1

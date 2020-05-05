@@ -1,0 +1,14 @@
+Base path: 'C:/Program Files/2019.3.0f3/Editor/Data', plugins path 'C:/Program Files/2019.3.0f3/Editor/Data/PlaybackEngines'
+Cmd: initializeCompiler
+Cmd: preprocessCompute
+  insize=8818 outsize=8817 ok=1
+Cmd: preprocessCompute
+  insize=8818 outsize=8817 ok=1
+Cmd: compileComputeKernel
+  error: 1 plat 4 at TestDensityShader.compute(63): signed/unsigned mismatch, unsigned assumed
+  error: 1 plat 4 at TestDensityShader.compute(73): signed/unsigned mismatch, unsigned assumed
+  error: 1 plat 4 at TestDensityShader.compute(87): implicit truncation of vector type
+  error: 1 plat 4 at TestDensityShader.compute(89): implicit truncation of vector type
+  api=4 insize=8817 outsize=27656 ok=1
+Cmd: preprocessCompute
+  insize=8748 outsize=8747 ok=1
